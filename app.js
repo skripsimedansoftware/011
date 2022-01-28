@@ -87,6 +87,17 @@ const Initialize_Database = () => {
 
 Initialize_Database().then(async init => {
 	DB = init;
+
+	var sha1 = require('crypto-js/sha1');
+	var user = await Models.user.count();
+	if (user < 1) {
+		await Models.user.create({
+			email: 'admin@nodejs-simple-app.software',
+			username: 'admin',
+			password: sha1('admin').toString(),
+			full_name: 'Administrator'
+		});
+	}
 });
 
 app.use(
