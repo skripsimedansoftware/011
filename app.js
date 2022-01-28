@@ -1,3 +1,5 @@
+require('dotenv').config(); // Load .env file for environment
+
 const express = require('express');
 const app = express();
 const cors = require('cors');
@@ -15,8 +17,77 @@ const session = express_session({
 	cookie: { secure: false, maxAge: Date.now() + (30 * 86400 * 1000) }
 });
 
+global.DB;
+global.Models;
 global.ViewEngine = require(__dirname+'/view-engine');
 global.moment = require('moment');
+
+const Initialize_Database = () => {
+	return new Promise((resolve, reject) => {
+		var config = require('./config/database');
+		const { host, port, username, password, database, dbdriver, timezone, debugging } = config;
+		const { Sequelize, Op, Model, DataTypes } = require('sequelize');
+		const connection = new Sequelize.Sequelize(database, username, password, {
+			host: host,
+			port: (port !== 3306)?port:3306,
+			dialect: dbdriver,
+			logging: debugging
+		});
+
+		// load models
+		const models = require(__dirname+'/models/');
+		const models_name = Object.keys(models);
+
+		for (var key = 0; key < models_name.length; key ++) {
+			var name = models_name[key];
+			var model = models[name](DataTypes);
+
+			name = (model.config !== undefined && model.config.modelName !== undefined)?model.config.modelName:name;
+			connection.define(name, model.fields, Object.assign({
+				tableName: name,
+				freezeTableName: true,
+				underscored: true,
+				createdAt: 'created_at',
+				updatedAt: 'updated_at',
+				charset: 'utf8mb4',
+				collate: 'utf8mb4_unicode_ci'
+			}, model.config));
+		}
+
+		for (var key = 0; key < models_name.length; key ++) {
+			var name = models_name[key];
+			var model = models[name](DataTypes);
+
+			if (model.associate !== undefined && model.associate.length > 0) {
+				model.associate.forEach((relation, key) => {
+					// removing object keys : type & model to show associations config only
+					var associate = model.associate.map((associate, k) => {
+						var new_object = {}
+						var object_keys  = Object.keys(associate);
+						for (var i = 0; i < object_keys.length; i++) {
+							if (['type', 'model'].indexOf(object_keys[i]) == -1) {
+								new_object[object_keys[i]] = associate[object_keys[i]];
+							}
+						}
+
+						return new_object;
+					});
+
+					connection.models[name][relation.type](connection.models[[model.associate[key].model]], associate[key]);
+				});
+			}
+		}
+
+		connection.sync({ [process.env.DB_MODE]: process.env.DB_SYNC }).then((conn) => {
+			global.Models = Object.assign(connection.models, global.Models);
+			resolve({ connection, Sequelize, Op, Model, DataTypes });
+		});
+	});
+}
+
+Initialize_Database().then(async init => {
+	DB = init;
+});
 
 app.use(
 	session,
