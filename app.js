@@ -2,9 +2,25 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const http = require('http').createServer(app);
+const flash = require('connect-flash');
+const express_session = require('express-session');
+const FileStore = require('session-file-store')(express_session);
+const session = express_session({
+	store: new FileStore(),
+	secret: 'my-secret-key',
+	resave: true,
+	saveUninitialized: true,
+	cookie: { secure: false, maxAge: Date.now() + (30 * 86400 * 1000) }
+});
 
 global.ViewEngine = require(__dirname+'/view-engine');
 
+app.use(
+	session,
+	flash(),
+	express.json(),
+	express.urlencoded({ extended: true })
+);
 app.set('views', __dirname+'/views');
 app.set('view engine', 'twig');
 app.use(cors({ origin : (origin, callback) => { callback(null, true) }, credentials: true }));
