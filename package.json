@@ -9,6 +9,17 @@
 	"keywords": [],
 	"author": "Agung Dirgantara <agungmasda29@gmail.com>",
 	"license": "MIT",
+	"nodemonConfig": {
+		"verbose": true,
+		"ext": "js,jsx, env",
+		"ignore": [
+			".env",
+			"*.test.js",
+			"*.backup",
+			"node_modules/",
+			"sessions/"
+		]
+	},
 	"dependencies": {
 		"compression": "^1.7.4",
 		"connect-flash": "^0.1.1",
