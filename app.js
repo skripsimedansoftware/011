@@ -104,12 +104,19 @@ app.use(
 	session,
 	flash(),
 	express.json(),
-	express.urlencoded({ extended: true })
+	express.urlencoded({ extended: true }),
+	express.static(__dirname+'/public')
 );
 app.set('views', __dirname+'/views');
 app.set('view engine', 'twig');
 app.use(cors({ origin : (origin, callback) => { callback(null, true) }, credentials: true }));
 app.use((req, res, next) => {
+	res.locals.app = {
+		name: 'NodeJs Simple App',
+		vendor: 'Medan Software',
+		version: 'v1.0.0'
+	}
+
 	res.render = (file, options = {}) => {
 		Object.assign(options, res.locals); // merge option variable to local variable
 		const Twig = new ViewEngine.Twig(__dirname+'/views'); // assign template paths
