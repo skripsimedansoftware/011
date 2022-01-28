@@ -134,6 +134,36 @@ app.use((req, res, next) => {
 	next();
 });
 
+const Middleware = {
+	admin: async (req, res, next) => {
+		if (req.originalUrl.match(/^\/admin(\/)?.*/)) {
+			var auth_pages = /\/(sign-in|sign-up|forgot-password|recover-account|confirm-code)\/?/;
+			if (typeof req.session.user_id == 'undefined') {
+				if (req.originalUrl.match(auth_pages) == null) {
+					req.flash('redirected', true);
+					res.status(401);
+					res.redirect('/admin/sign-in');
+				} else {
+					next();
+				}
+			} else {
+				res.locals.user = await Models.user.findOne({
+					where: {
+						id: req.session.user_id
+					}
+				});
+				if (req.originalUrl.match(auth_pages) !== null) {
+					res.redirect('/admin');
+				} else {
+					next();
+				}
+			}
+		} else {
+			next();
+		}
+	}
+}
+
 app.get('/', (req, res) => {
 	res.render('home.twig', {
 		name: 'Developer'
@@ -142,6 +172,43 @@ app.get('/', (req, res) => {
 	res.render('about.twig');
 }).get('/contact', (req, res) => {
 	res.render('contact.twig');
+});
+
+app.get('/admin', Middleware.admin, (req, res) => {
+	res.render('admin/home.twig');
+})
+.get('/admin/sign-in', Middleware.admin, (req, res) => {
+	res.render('admin/sign-in.twig');
+})
+.post('/admin/sign-in', Middleware.admin, async (req, res) => {
+	var sha1 = require('crypto-js/sha1');
+	var sign_in = await Models.user.findOne({
+		where: {
+			[DB.Op.or]: [
+				{ email: req.body.identity },
+				{ username: req.body.identity }
+			],
+			password: sha1(req.body.password).toString()
+		}
+	});
+
+	if (sign_in !== null) {
+		req.session.user_id = sign_in.id;
+		req.flash('sign_in', true);
+		res.redirect('/admin');
+	} else {
+		req.flash('redirected', true);
+		res.status(401);
+		res.redirect('/admin/sign-in');
+	}
+})
+.get('/admin/profile', Middleware.admin, (req, res) => {
+	res.render('admin/profile.twig');
+})
+.get('/admin/sign-out', Middleware.admin, (req, res) => {
+	req.session.destroy((err) => {
+		res.redirect('/admin/sign-in');
+	});
 });
 
 http.listen(process.env.PORT || 8080);
