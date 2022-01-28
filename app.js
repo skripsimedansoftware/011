@@ -5,6 +5,8 @@ const http = require('http').createServer(app);
 const flash = require('connect-flash');
 const express_session = require('express-session');
 const FileStore = require('session-file-store')(express_session);
+const moment_timezone = require('moment-timezone');
+const moment_duration = require('moment-duration-format');
 const session = express_session({
 	store: new FileStore(),
 	secret: 'my-secret-key',
@@ -14,6 +16,7 @@ const session = express_session({
 });
 
 global.ViewEngine = require(__dirname+'/view-engine');
+global.moment = require('moment');
 
 app.use(
 	session,
