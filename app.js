@@ -6,6 +6,7 @@ const cors = require('cors');
 const http = require('http').createServer(app);
 const flash = require('connect-flash');
 const express_session = require('express-session');
+const express_socketio_session = require('express-socket.io-session');
 const FileStore = require('session-file-store')(express_session);
 const moment_timezone = require('moment-timezone');
 const moment_duration = require('moment-duration-format');
@@ -16,11 +17,14 @@ const session = express_session({
 	saveUninitialized: true,
 	cookie: { secure: false, maxAge: Date.now() + (30 * 86400 * 1000) }
 });
+const io = require('socket.io')(http, { path: '/ws' });
+io.use(express_socketio_session(session, { autoSave: true })); //socket.io session
 
 global.DB;
 global.Models;
 global.ViewEngine = require(__dirname+'/view-engine');
 global.moment = require('moment');
+global.Sockets = require(__dirname+'/sockets');
 
 const Initialize_Database = () => {
 	return new Promise((resolve, reject) => {
