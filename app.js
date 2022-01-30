@@ -198,8 +198,48 @@ app.get('/admin', Middleware.admin, (req, res) => {
 		res.redirect('/admin');
 	} else {
 		req.flash('redirected', true);
-		res.status(401);
+		res.status(401).redirect('/admin/sign-in');
+	}
+})
+.get('/admin/sign-up', Middleware.admin, (req, res) => {
+	res.render('admin/sign-up.twig');
+})
+.post('/admin/sign-up', Middleware.admin, async (req, res) => {
+	var sha1 = require('crypto-js/sha1');
+	var sign_up = await Models.user.create({
+		email: req.body.email,
+		username: req.body.username,
+		password: sha1(req.body.password).toString(),
+		full_name: req.body.full_name
+	});
+
+	if (sign_up) {
+		req.flash('sign_up', true);
 		res.redirect('/admin/sign-in');
+	} else {
+		req.flash('sign_up', true);
+		res.status(401).redirect('/admin/sign-in');
+	}
+})
+.get('/admin/forgot-password', Middleware.admin, (req, res) => {
+	res.render('admin/forgot-password.twig');
+})
+.post('/admin/forgot-password', Middleware.admin, async (req, res) => {
+	var forgot_password = await Models.user.findOne({
+		where: {
+			[DB.Op.or]: [
+				{ email: req.body.identity },
+				{ username: req.body.identity }
+			]
+		}
+	});
+
+	if (forgot_password) {
+		req.flash('forgot_password', true);
+		res.redirect('/admin');
+	} else {
+		req.flash('redirected', true);
+		res.status(401).redirect('/admin/sign-in');
 	}
 })
 .get('/admin/profile', Middleware.admin, (req, res) => {
