@@ -6,7 +6,7 @@ module.exports.username = 'root';
 
 module.exports.password = '';
 
-module.exports.database = 'nodejs-app-simple';
+module.exports.database = 'chat-bot-nlp';
 
 module.exports.dbdriver = 'mysql';
 
