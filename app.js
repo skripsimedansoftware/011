@@ -1,15 +1,16 @@
 require('dotenv').config(); // Load .env file for environment
 
 const express = require('express');
-const app = express();
-const cors = require('cors');
+const app = express(); // ExpressJS
+const cors = require('cors'); // Cross-Origin Resource Sharing (CORS)
 const http = require('http').createServer(app);
-const flash = require('connect-flash');
-const express_session = require('express-session');
-const express_socketio_session = require('express-socket.io-session');
-const FileStore = require('session-file-store')(express_session);
-const moment_timezone = require('moment-timezone');
-const moment_duration = require('moment-duration-format');
+const flash = require('connect-flash'); // Session flash
+const express_session = require('express-session'); // ExpressJS session
+const express_socketio_session = require('express-socket.io-session'); // ExpressJs + Socket.io session
+const FileStore = require('session-file-store')(express_session); // ExpressJs session with file
+const moment_timezone = require('moment-timezone'); // MomentJs for time
+const moment_duration = require('moment-duration-format'); // MomentJs duration package
+// Initialize expressJs session
 const session = express_session({
 	store: new FileStore(),
 	secret: 'my-secret-key',
@@ -18,14 +19,22 @@ const session = express_session({
 	cookie: { secure: false, maxAge: Date.now() + (30 * 86400 * 1000) }
 });
 const io = require('socket.io')(http, { path: '/ws' });
-io.use(express_socketio_session(session, { autoSave: true })); //socket.io session
+io.use(express_socketio_session(session, { autoSave: true })); // Initialize expressjs session with socket.io
 
+// Set global variable
 global.DB;
+global.io = io;
 global.Models;
-global.ViewEngine = require(__dirname+'/view-engine');
-global.moment = require('moment');
-global.Sockets = require(__dirname+'/sockets');
+global.ViewEngine = require(__dirname+'/view-engine'); // Setup view engine
+global.moment = require('moment'); // MomentJs for date and time
+global.Sockets = require(__dirname+'/sockets'); // Socket.io files
 
+
+/**
+ * Initialzie Database
+ *
+ * @return     {Promise}  Database object
+ */
 const Initialize_Database = () => {
 	return new Promise((resolve, reject) => {
 		var config = require('./config/database');
@@ -40,11 +49,11 @@ const Initialize_Database = () => {
 
 		// load models
 		const models = require(__dirname+'/models/');
-		const models_name = Object.keys(models);
+		const models_name = Object.keys(models); // get models name by files name
 
 		for (var key = 0; key < models_name.length; key ++) {
 			var name = models_name[key];
-			var model = models[name](DataTypes);
+			var model = models[name](DataTypes); // execute model class as function
 
 			name = (model.config !== undefined && model.config.modelName !== undefined)?model.config.modelName:name;
 			connection.define(name, model.fields, Object.assign({
@@ -104,6 +113,7 @@ Initialize_Database().then(async init => {
 	}
 });
 
+// ExpressJs middleware
 app.use(
 	session,
 	flash(),
@@ -111,16 +121,17 @@ app.use(
 	express.urlencoded({ extended: true }),
 	express.static(__dirname+'/public')
 );
-app.set('views', __dirname+'/views');
-app.set('view engine', 'twig');
-app.use(cors({ origin : (origin, callback) => { callback(null, true) }, credentials: true }));
+app.set('views', __dirname+'/views'); // Initialize view files to express js
+app.set('view engine', 'twig'); // Initialize view engine to twig
+app.use(cors({ origin : (origin, callback) => { callback(null, true) }, credentials: true })); // Initialize HTTP CORS
 app.use((req, res, next) => {
 	res.locals.app = {
-		name: 'NodeJs Simple App',
-		vendor: 'Medan Software',
+		name: 'Chat Bot NLP',
+		vendor: 'Tyas Kesuma',
 		version: 'v1.0.0'
 	}
 
+	// Render view file
 	res.render = (file, options = {}) => {
 		Object.assign(options, res.locals); // merge option variable to local variable
 		const Twig = new ViewEngine.Twig(__dirname+'/views'); // assign template paths
@@ -138,6 +149,7 @@ app.use((req, res, next) => {
 	next();
 });
 
+// ExpressJs middleware
 const Middleware = {
 	admin: async (req, res, next) => {
 		if (req.originalUrl.match(/^\/admin(\/)?.*/)) {
@@ -168,22 +180,28 @@ const Middleware = {
 	}
 }
 
+// Site routing
 app.get('/', (req, res) => {
-	res.render('home.twig', {
-		name: 'Developer'
-	});
+	res.render('home.twig');
 }).get('/about', (req, res) => {
 	res.render('about.twig');
 }).get('/contact', (req, res) => {
 	res.render('contact.twig');
 });
 
-app.get('/admin', Middleware.admin, (req, res) => {
+/**
+ * Admin chat bot routing
+ */
+app
+// dashboard
+.get('/admin', Middleware.admin, (req, res) => {
 	res.render('admin/home.twig');
 })
+// sign in
 .get('/admin/sign-in', Middleware.admin, (req, res) => {
 	res.render('admin/sign-in.twig');
 })
+// sign in post data
 .post('/admin/sign-in', Middleware.admin, async (req, res) => {
 	var sha1 = require('crypto-js/sha1');
 	var sign_in = await Models.user.findOne({
@@ -205,9 +223,11 @@ app.get('/admin', Middleware.admin, (req, res) => {
 		res.status(401).redirect('/admin/sign-in');
 	}
 })
+// sign up
 .get('/admin/sign-up', Middleware.admin, (req, res) => {
 	res.render('admin/sign-up.twig');
 })
+// sign up post data
 .post('/admin/sign-up', Middleware.admin, async (req, res) => {
 	var sha1 = require('crypto-js/sha1');
 	var sign_up = await Models.user.create({
@@ -225,9 +245,11 @@ app.get('/admin', Middleware.admin, (req, res) => {
 		res.status(401).redirect('/admin/sign-in');
 	}
 })
+// forgot password
 .get('/admin/forgot-password', Middleware.admin, (req, res) => {
 	res.render('admin/forgot-password.twig');
 })
+// forgot password post data
 .post('/admin/forgot-password', Middleware.admin, async (req, res) => {
 	var forgot_password = await Models.user.findOne({
 		where: {
@@ -246,9 +268,11 @@ app.get('/admin', Middleware.admin, (req, res) => {
 		res.status(401).redirect('/admin/sign-in');
 	}
 })
+// profile
 .get('/admin/profile', Middleware.admin, (req, res) => {
 	res.render('admin/profile.twig');
 })
+// sign out
 .get('/admin/sign-out', Middleware.admin, (req, res) => {
 	req.session.destroy((err) => {
 		res.redirect('/admin/sign-in');
