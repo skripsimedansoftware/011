@@ -1,0 +1,98 @@
+{% extends 'admin/base.twig' %}
+
+{% block title %}Halaman - {{ app.name }}{% endblock %}
+
+{%
+	set breadcrumbs = [
+		{
+			link: '/admin/page',
+			name: 'halaman'
+		}
+	]
+%}
+{% block content %}
+	<section class="content">
+		<form action="
+		{% if data == 'new' %}
+			{{ '/admin/page' }}
+		{% else %}
+			{{ '/admin/page/' ~ data.id }}
+		{% endif %}
+		" method="post">
+			<div class="box">
+				<div class="box-header with-border">
+					<h3 class="box-title">
+						{% if mode == 'list' %}
+							Daftar Halaman
+						{% elseif mode == 'view' %}
+							Preview Halaman : {{ data.title }}
+						{% elseif mode == 'new' %}
+							Buat Halaman Baru
+						{% else %}
+							Sunting Halaman
+						{% endif %}
+					</h3>
+				</div>
+				<div class="box-body">
+					{% if  mode == 'list' %}
+						<table class="table table-hover table-striped">
+							<thead>
+								<th>No</th>
+								<th>Judul</th>
+								<th>Tanggal Pembuatan</th>
+								<th>Terakhir Diperbaharui</th>
+								<th>Opsi</th>
+							</thead>
+							<tbody>
+								{% for page in data %}
+									<tr>
+										<td>{{ loop.index }}</td>
+										<td>{{ page.title }}</td>
+										<td>{{ page.created_at|date('d/m/Y') }}</td>
+										<td>{{ page.updated_at|date('d/m/Y') }}</td>
+										<td>
+											<a href="/admin/page/edit/{{ data.id }}" class="btn btn-xs btn-primary"><i class="fa fa-edit"></i></a>
+											<a href="/admin/page/delete/{{ data.id }}" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i></a>
+										</td>
+									</tr>
+								{% endfor %}
+								<tr>
+
+								</tr>
+							</tbody>
+						</table>
+					{% elseif  mode == 'view' %}
+						{{ data.content }}
+					{% else %}
+						<div class="form-group">
+							<label>URL Halaman</label>
+							<input type="text" class="form-control" name="slug" placeholder="URL Halaman" value="{{ data.slug|default('') }}">
+						</div>
+						<div class="form-group">
+							<label>Judul</label>
+							<input type="text" class="form-control" name="title" placeholder="Judul Halaman" value="{{ data.title|default('') }}">
+						</div>
+						<div class="form-group">
+							<label>Isi</label>
+							<textarea class="form-group wysihtml5" style="width: 100%; height: 200px; font-size: 14px; line-height: 18px; border: 1px solid #dddddd; padding: 10px;">{{ data.content|default('') }}</textarea>
+						</div>
+					{% endif %}
+				</div>
+				<div class="box-footer">
+					{% if mode == 'list' %}
+						<a class="btn btn-primary" onclick="window.history.back()"><i class="fa fa-arrow-circle-left"></i> Kembali</a>
+						<a href="/admin/page/new" class="btn btn-success"><i class="fa fa-plus"></i> Halaman Baru</a>
+					{% elseif mode == 'view' %}
+						<a class="btn btn-primary" onclick="window.history.back()"><i class="fa fa-arrow-circle-left"></i> Kembali</a>
+						<a href="/admin/page/edit/{{ data.id }}" class="btn btn-warning"><i class="fa fa-pencil"></i> Sunting</a>
+						<a href="/admin/page/delete/{{ data.id }}" class="btn btn-danger"><i class="fa fa-trash"></i> Hapus</a>
+						<a href="/admin/page/new" class="btn btn-success"><i class="fa fa-plus"></i> Halaman Baru</a>
+					{% else %}
+						<a class="btn btn-primary" onclick="window.history.back()"><i class="fa fa-arrow-circle-left"></i> Batalkan</a>
+						<button type="submit" class="btn btn-success"><i class="fa fa-save"></i> Simpan</button>
+					{% endif %}
+				</div>
+			</div>
+		</form>
+	</section>
+{% endblock %}

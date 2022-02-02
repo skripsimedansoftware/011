@@ -6,6 +6,14 @@ module.exports = function(DataTypes) {
 				primaryKey: true,
 				autoIncrement: true
 			},
+			role: {
+				type: DataTypes.ENUM('admin', 'user'),
+				allowNull: false
+			},
+			id_card: {
+				type: DataTypes.STRING(40),
+				allowNull: true
+			},
 			email: {
 				type: DataTypes.STRING(40),
 				allowNull: true

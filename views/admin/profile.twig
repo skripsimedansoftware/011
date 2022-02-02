@@ -1,5 +1,18 @@
 {% extends 'admin/base.twig' %}
 
+{% block title %}{{ user_profile.username }} - {{ app.name }}{% endblock %}
+
+{% set breadcrumbs = [
+	{
+		link: '/admin/user',
+		name: 'pengguna'
+	},
+	{
+		link: '#',
+		name: (user_profile?user_profile.id == user.id?'profil':user_profile.username:'profil')
+	}
+] %}
+
 {% block content %}
 <section class="content">
 	<div class="box">

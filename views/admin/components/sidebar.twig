@@ -17,19 +17,48 @@
 		<!-- sidebar menu: : style can be found in sidebar.less -->
 		<ul class="sidebar-menu" data-widget="tree">
 			<li class="header">MAIN MENU</li>
-			<li><a href="/admin"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a></li>
+			<li><a href="/admin"><i class="fa fa-dashboard"></i> <span>Halaman Utama</span></a></li>
+			<li><a href="/admin"><i class="fa fa-comments"></i> <span>Live Chat</span></a></li>
 			<li class="treeview">
 				<a href="#">
-					<i class="fa fa-cubes"></i> <span>Data</span>
+					<i class="fa fa-cubes"></i> <span>Training Bot</span>
 					<span class="pull-right-container">
 						<i class="fa fa-angle-left pull-right"></i>
 					</span>
 				</a>
 				<ul class="treeview-menu">
-					<li><a href="/admin"><i class="fa fa-circle-o"></i> Menu 1</a></li>
-					<li><a href="/admin"><i class="fa fa-circle-o"></i> Menu 2</a></li>
+					<li><a href="/admin"><i class="fa fa-circle-o"></i> Kalimat</a></li>
+					<li><a href="/admin"><i class="fa fa-key"></i> Kata Kunci</a></li>
+					<li><a href="/admin"><i class="fa fa-cogs"></i> Pengaturan</a></li>
 				</ul>
 			</li>
+			<li class="treeview">
+				<a href="#">
+					<i class="fa fa-file-o"></i> <span>Data Pelayanan</span>
+					<span class="pull-right-container">
+						<i class="fa fa-angle-left pull-right"></i>
+					</span>
+				</a>
+				<ul class="treeview-menu">
+					<li><a href="/admin"><i class="fa fa-circle-o"></i> Pengurusan Dokumen</a></li>
+					<li><a href="/admin"><i class="fa fa-circle-o"></i> Pengurusan Izin</a></li>
+				</ul>
+			</li>
+			<li class="treeview">
+				<a href="/">
+					<i class="fa fa-file"></i> <span>Halaman</span>
+					<span class="pull-right-container">
+						<i class="fa fa-angle-left pull-right"></i>
+					</span>
+				</a>
+				<ul class="treeview-menu">
+					<li><a href="/admin/page"><i class="fa fa-circle-o"></i> Daftar Halaman</a></li>
+					{% for page in pages %}
+						<li><a href="/admin/page/view/{{ page.id }}"><i class="fa fa-circle-o"></i> {{ page.title }}</a></li>
+					{% endfor %}
+				</ul>
+			</li>
+			<li><a href="/admin"><i class="fa fa-wrench"></i> <span>Pengaturan Umum</span></a></li>
 		</ul>
 	</section>
 	<!-- /.sidebar -->

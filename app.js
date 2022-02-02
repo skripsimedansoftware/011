@@ -21,6 +21,9 @@ const session = express_session({
 const io = require('socket.io')(http, { path: '/ws' });
 io.use(express_socketio_session(session, { autoSave: true })); // Initialize expressjs session with socket.io
 
+global.visitors = new Array();
+global.admins = new Array();
+
 // Set global variable
 global.DB;
 global.io = io;
@@ -28,6 +31,14 @@ global.Models;
 global.ViewEngine = require(__dirname+'/view-engine'); // Setup view engine
 global.moment = require('moment'); // MomentJs for date and time
 global.Sockets = require(__dirname+'/sockets'); // Socket.io files
+
+const string_to_boolean = function(str) {
+	switch(str.toLowerCase().trim()) {
+		case "true": case "yes": case "1": return true;
+		case "false": case "no": case "0": case null: return false;
+		default: return Boolean(str);
+	}
+}
 
 
 /**
@@ -91,7 +102,7 @@ const Initialize_Database = () => {
 			}
 		}
 
-		connection.sync({ [process.env.DB_MODE]: process.env.DB_SYNC }).then((conn) => {
+		connection.sync({ [process.env.DB_MODE]: string_to_boolean(process.env.DB_SYNC) }).then((conn) => {
 			global.Models = Object.assign(connection.models, global.Models);
 			resolve({ connection, Sequelize, Op, Model, DataTypes });
 		});
@@ -105,7 +116,8 @@ Initialize_Database().then(async init => {
 	var user = await Models.user.count();
 	if (user < 1) {
 		await Models.user.create({
-			email: 'admin@nodejs-simple-app.software',
+			role: 'admin',
+			email: 'admin@nlp-chat-bot.com',
 			username: 'admin',
 			password: sha1('admin').toString(),
 			full_name: 'Administrator'
@@ -177,13 +189,31 @@ const Middleware = {
 		} else {
 			next();
 		}
+	},
+	page: async (req, res, next) => {
+		res.locals.pages = await Models.page.findAll();
+		next();
 	}
 }
+
+app.use(Middleware.page);
 
 // Site routing
 app.get('/', (req, res) => {
 	res.render('home.twig');
-}).get('/about', (req, res) => {
+})
+.get('/page/:slug', async (req, res) => {
+	var page = await Models.page.findOne({
+		where: {
+			slug: req.params.slug
+		}
+	});
+
+	res.render('page.twig', {
+		page: page
+	});
+})
+.get('/about', (req, res) => {
 	res.render('about.twig');
 }).get('/contact', (req, res) => {
 	res.render('contact.twig');
@@ -268,9 +298,52 @@ app
 		res.status(401).redirect('/admin/sign-in');
 	}
 })
-// profile
-.get('/admin/profile', Middleware.admin, (req, res) => {
+// user profile
+.get('/admin/user/:uid?', Middleware.admin, async (req, res) => {
+	res.locals.user_profile = await Models.user.findOne({
+		where: {
+			id: (req.params.uid !== undefined)?req.params.uid:res.locals.user.id
+		}
+	});
 	res.render('admin/profile.twig');
+})
+
+.get('/admin/page/:option?/:id?', Middleware.admin, async (req, res) => {
+	var mode;
+	var data = await new Promise(async (resolve, reject) => {
+		if ((req.params.option == 'view' || req.params.option == undefined) && req.params.id == undefined) {
+			mode = 'list';
+			resolve(await Models.page.findAll());
+		} else if (req.params.option == 'view' && req.params.id !== undefined) {
+			mode = 'view';
+			resolve(await Models.page.findOne({
+				where: {
+					id: req.params.id
+				}
+			}));
+		} else if (req.params.option == 'delete' && req.params.id !== undefined) {
+			var page = await Models.page.findOne({
+				where: {
+					id: req.params.id
+				}
+			});
+			res.redirect('/admin/page');
+		} else if (req.params.option == 'new') {
+			mode = 'new';
+			resolve(true);
+		} else if (req.params.option == 'edit' && req.params.id !== undefined) {
+			mode = 'edit';
+			resolve(await Models.page.findOne({
+				where: {
+					id: req.params.id
+				}
+			}));
+		} else {
+			resolve(false);
+		}
+	});
+
+	res.render('admin/page.twig', { data: data, mode: mode });
 })
 // sign out
 .get('/admin/sign-out', Middleware.admin, (req, res) => {
