@@ -139,7 +139,7 @@ app.use(cors({ origin : (origin, callback) => { callback(null, true) }, credenti
 app.use((req, res, next) => {
 	res.locals.app = {
 		name: 'Chat Bot NLP',
-		vendor: 'Tyas Kesuma',
+		vendor: 'Kesuma Dwi Ningtyas',
 		version: 'v1.0.0'
 	}
 
@@ -180,6 +180,7 @@ const Middleware = {
 						id: req.session.user_id
 					}
 				});
+
 				if (req.originalUrl.match(auth_pages) !== null) {
 					res.redirect('/admin');
 				} else {
