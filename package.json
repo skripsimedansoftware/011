@@ -1,7 +1,7 @@
 {
-	"name": "express-app-starter",
+	"name": "chat-bot-nlp-naive-bayes",
 	"version": "1.0.0",
-	"description": "NodeJs App",
+	"description": "Chat Bot NLP Naive Bayes",
 	"main": "app.js",
 	"scripts": {
 		"start": "node app.js"

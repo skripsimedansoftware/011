@@ -28,10 +28,17 @@ global.admins = new Array();
 global.DB;
 global.io = io;
 global.Models;
+global.Libraries = require(__dirname+'/libraries'); // Load libraries
 global.ViewEngine = require(__dirname+'/view-engine'); // Setup view engine
 global.moment = require('moment'); // MomentJs for date and time
 global.Sockets = require(__dirname+'/sockets'); // Socket.io files
 
+/**
+ * String to Boolean
+ *
+ * @param      {string}   str     string
+ * @return     {boolean}
+ */
 const string_to_boolean = function(str) {
 	switch(str.toLowerCase().trim()) {
 		case "true": case "yes": case "1": return true;
@@ -39,7 +46,6 @@ const string_to_boolean = function(str) {
 		default: return Boolean(str);
 	}
 }
-
 
 /**
  * Initialzie Database
@@ -148,6 +154,19 @@ app.use((req, res, next) => {
 		Object.assign(options, res.locals); // merge option variable to local variable
 		const Twig = new ViewEngine.Twig(__dirname+'/views'); // assign template paths
 
+		// Register Filter : map_merge
+		Twig.addFilter('map_merge', (array_object, new_item) => {
+			if (new_item.has(0)) {
+				new_item.forEach((value, key, map) => {
+					array_object.set(array_object.size, value);
+				});
+			} else {
+				array_object.set(array_object.size, new_item);
+			}
+
+			return Promise.resolve(array_object);
+		});
+
 		// render with twig
 		Twig.render(file, options, (error, output) => {
 			if (error) {
@@ -201,7 +220,8 @@ app.use(Middleware.page);
 
 // Site routing
 app.get('/', (req, res) => {
-	res.render('home.twig');
+	res.render('home.twig', {
+	});
 })
 .get('/page/:slug', async (req, res) => {
 	var page = await Models.page.findOne({
@@ -226,7 +246,9 @@ app.get('/', (req, res) => {
 app
 // dashboard
 .get('/admin', Middleware.admin, (req, res) => {
-	res.render('admin/home.twig');
+	res.render('admin/home.twig', {
+		active_menu: 'home'
+	});
 })
 // sign in
 .get('/admin/sign-in', Middleware.admin, (req, res) => {
@@ -328,6 +350,7 @@ app
 					id: req.params.id
 				}
 			});
+			page.destroy();
 			res.redirect('/admin/page');
 		} else if (req.params.option == 'new') {
 			mode = 'new';
@@ -346,6 +369,41 @@ app
 
 	res.render('admin/page.twig', { data: data, mode: mode });
 })
+.post('/admin/page/:option?/:id?', Middleware.admin, async (req, res) => {
+	if (req.params.option == undefined || req.params.option == 'add') {
+		await Models.page.create({
+			name: req.body.name,
+			title: req.body.title,
+			slug: req.body.slug,
+			content: req.body.content
+		});
+
+		res.redirect('/admin/page');
+	} else if (req.params.option == 'edit') {
+		var page = await Models.page.findOne({
+			where: {
+				id: req.params.id
+			}
+		});
+
+		if (page !== null) {
+			await page.update({
+				name: req.body.name,
+				title: req.body.title,
+				slug: req.body.slug,
+				content: req.body.content
+			});
+		}
+
+		res.redirect('/admin/page');
+	}
+})
+.get('/admin/live_chat', Middleware.admin, (req, res) => {
+	res.render('admin/live_chat.twig', {
+		active_menu: 'live_chat'
+	});
+})
+
 // sign out
 .get('/admin/sign-out', Middleware.admin, (req, res) => {
 	req.session.destroy((err) => {

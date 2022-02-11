@@ -11,8 +11,8 @@
 		</div>
 		<ul class="sidebar-menu" data-widget="tree">
 			<li class="header">MAIN MENU</li>
-			<li><a href="/admin"><i class="fa fa-dashboard"></i> <span>Halaman Utama</span></a></li>
-			<li><a href="/admin"><i class="fa fa-comments"></i> <span>Live Chat</span></a></li>
+			<li class="{{ active_menu == 'home' ? 'active' : '' }}"><a href="/admin"><i class="fa fa-dashboard"></i> <span>Halaman Utama</span></a></li>
+			<li class="{{ active_menu == 'live_chat' ? 'active' : '' }}"><a href="/admin/live_chat"><i class="fa fa-comments"></i> <span>Live Chat</span></a></li>
 			<li class="treeview">
 				<a href="#">
 					<i class="fa fa-cubes"></i> <span>Training Bot</span>
@@ -22,8 +22,8 @@
 				</a>
 				<ul class="treeview-menu">
 					<li><a href="/admin"><i class="fa fa-circle-o"></i> Kalimat</a></li>
-					<li><a href="/admin"><i class="fa fa-key"></i> Kata Kunci</a></li>
-					<li><a href="/admin"><i class="fa fa-cogs"></i> Pengaturan</a></li>
+					<li><a href="/admin"><i class="fa fa-circle-o"></i> Kata Kunci</a></li>
+					<li><a href="/admin"><i class="fa fa-circle-o"></i> Pengaturan</a></li>
 				</ul>
 			</li>
 			<li class="treeview">
@@ -52,7 +52,6 @@
 					{% endfor %}
 				</ul>
 			</li>
-			<li><a href="/admin"><i class="fa fa-wrench"></i> <span>Pengaturan Umum</span></a></li>
 		</ul>
 	</section>
 </aside>
