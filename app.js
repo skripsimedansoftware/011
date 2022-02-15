@@ -221,6 +221,7 @@ app.use(Middleware.page);
 // Site routing
 app.get('/', (req, res) => {
 	res.render('home.twig', {
+		name: 'Deve'
 	});
 })
 .get('/page/:slug', async (req, res) => {
@@ -332,7 +333,9 @@ app
 })
 
 .get('/admin/page/:option?/:id?', Middleware.admin, async (req, res) => {
+	var menu = 'page';
 	var mode;
+	var data_id = req.params.id;
 	var data = await new Promise(async (resolve, reject) => {
 		if ((req.params.option == 'view' || req.params.option == undefined) && req.params.id == undefined) {
 			mode = 'list';
@@ -367,18 +370,17 @@ app
 		}
 	});
 
-	res.render('admin/page.twig', { data: data, mode: mode });
+	res.render('admin/page.twig', { data: data, menu: menu, mode: mode, data_id: data_id });
 })
 .post('/admin/page/:option?/:id?', Middleware.admin, async (req, res) => {
 	if (req.params.option == undefined || req.params.option == 'add') {
 		await Models.page.create({
-			name: req.body.name,
 			title: req.body.title,
 			slug: req.body.slug,
 			content: req.body.content
 		});
 
-		res.redirect('/admin/page');
+		res.json({ status: 'success' });
 	} else if (req.params.option == 'edit') {
 		var page = await Models.page.findOne({
 			where: {
@@ -395,7 +397,7 @@ app
 			});
 		}
 
-		res.redirect('/admin/page');
+		res.json({ status: 'success' });
 	}
 })
 .get('/admin/live_chat', Middleware.admin, (req, res) => {

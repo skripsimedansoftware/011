@@ -14,18 +14,18 @@
 	<section class="content">
 		<form action="
 		{% if data == 'new' %}
-			{{ '/admin/page' }}
+			{{ '/admin/page/add' }}
 		{% else %}
 			{{ '/admin/page/edit/' ~ data.id }}
 		{% endif %}
-		" method="post">
+		" method="post" id="page">
 			<div class="box">
 				<div class="box-header with-border">
 					<h3 class="box-title">
 						{% if mode == 'list' %}
 							Daftar Halaman
 						{% elseif mode == 'view' %}
-							Preview Halaman : {{ data.title }}
+							Pratinjau Halaman : <b>{{ data.title }}</b>
 						{% elseif mode == 'new' %}
 							Buat Halaman Baru
 						{% else %}
@@ -51,6 +51,7 @@
 										<td>{{ page.created_at|date('d/m/Y') }}</td>
 										<td>{{ page.updated_at|date('d/m/Y') }}</td>
 										<td>
+											<a href="/admin/page/view/{{ page.id }}" class="btn btn-xs btn-info"><i class="fa fa-eye"></i></a>
 											<a href="/admin/page/edit/{{ page.id }}" class="btn btn-xs btn-primary"><i class="fa fa-edit"></i></a>
 											<a href="/admin/page/delete/{{ page.id }}" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i></a>
 										</td>
@@ -62,11 +63,13 @@
 							</tbody>
 						</table>
 					{% elseif  mode == 'view' %}
-						{{ data.content }}
+						{% if data.content|trim is not empty %}
+							{{ data.content|raw }}
+						{% endif %}
 					{% else %}
 						<div class="form-group">
-							<label>Nama Halaman</label>
-							<input type="text" class="form-control" name="name" placeholder="Nama Halaman" value="{{ data.name|default('') }}">
+							<label>Judul</label>
+							<input type="text" class="form-control" name="title" placeholder="Judul Halaman" value="{{ data.title|default('') }}">
 						</div>
 						<div class="form-group">
 							<label>URL Halaman</label>
@@ -74,10 +77,6 @@
 								<input class="form-control" type="text" name="slug" placeholder="URL Halaman" value="{{ data.slug|default('') }}" disabled>
 								<div class="input-group-addon"><i class="fa fa-pencil"></i></div>
 							</div>
-						</div>
-						<div class="form-group">
-							<label>Judul</label>
-							<input type="text" class="form-control" name="title" placeholder="Judul Halaman" value="{{ data.title|default('') }}">
 						</div>
 						<div class="form-group">
 							<label>Isi</label>
@@ -112,6 +111,31 @@ function edit_slug(el) {
 
 $('input[name="title"]').on('keyup', () => {
 	$('input[name="slug"]').val($('input[name="title"]').val().toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''));
+});
+</script>
+
+
+<script type="text/javascript">
+$('#page').on('submit', function(e) {
+	e.preventDefault();
+	$.ajax({
+		url: $(this).attr('action'),
+		type: $(this).attr('method'),
+		dataType: 'JSON',
+		data: {
+			title: $('input[name="title"]').val(),
+			slug: $('input[name="slug"]').val(),
+			content: $('textarea[name="content"]').val()
+		},
+		success: function(data) {
+			if (data.status == 'success') {
+				window.location.href = '/admin';
+			}
+		},
+		error: function(error) {
+			console.log(error);
+		}
+	});
 });
 </script>
 {% endblock %}

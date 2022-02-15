@@ -38,7 +38,7 @@
 					<li><a href="/admin"><i class="fa fa-circle-o"></i> Pengurusan Izin</a></li>
 				</ul>
 			</li>
-			<li class="treeview">
+			<li class="treeview {{ menu == 'page'?'active':'' }}">
 				<a href="/">
 					<i class="fa fa-file"></i> <span>Halaman</span>
 					<span class="pull-right-container">
@@ -46,9 +46,9 @@
 					</span>
 				</a>
 				<ul class="treeview-menu">
-					<li><a href="/admin/page"><i class="fa fa-circle-o"></i> Daftar Halaman</a></li>
+					<li class="{{ mode == 'list'?'active':''}}"><a href="/admin/page"><i class="fa fa-circle-o"></i> Daftar Halaman</a></li>
 					{% for page in pages %}
-						<li><a href="/admin/page/view/{{ page.id }}"><i class="fa fa-circle-o"></i> {{ page.title }}</a></li>
+						<li class="{{ data_id == page.id?'active':'' }}"><a href="/admin/page/view/{{ page.id }}"><i class="fa fa-circle-o"></i> {{ page.title }}</a></li>
 					{% endfor %}
 				</ul>
 			</li>
