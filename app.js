@@ -221,7 +221,7 @@ app.use(Middleware.page);
 // Site routing
 app.get('/', (req, res) => {
 	res.render('home.twig', {
-		name: 'Deve'
+		name: 'Developer'
 	});
 })
 .get('/page/:slug', async (req, res) => {
@@ -234,28 +234,27 @@ app.get('/', (req, res) => {
 	res.render('page.twig', {
 		page: page
 	});
-})
-.get('/about', (req, res) => {
-	res.render('about.twig');
-}).get('/contact', (req, res) => {
-	res.render('contact.twig');
 });
 
 /**
  * Admin chat bot routing
  */
 app
-// dashboard
+/**
+ * Dashboard
+ */
 .get('/admin', Middleware.admin, (req, res) => {
 	res.render('admin/home.twig', {
 		active_menu: 'home'
 	});
 })
-// sign in
+
+/**
+ * Sign in
+ */
 .get('/admin/sign-in', Middleware.admin, (req, res) => {
 	res.render('admin/sign-in.twig');
 })
-// sign in post data
 .post('/admin/sign-in', Middleware.admin, async (req, res) => {
 	var sha1 = require('crypto-js/sha1');
 	var sign_in = await Models.user.findOne({
@@ -277,11 +276,13 @@ app
 		res.status(401).redirect('/admin/sign-in');
 	}
 })
-// sign up
+
+/**
+ * Sign Up
+ */
 .get('/admin/sign-up', Middleware.admin, (req, res) => {
 	res.render('admin/sign-up.twig');
 })
-// sign up post data
 .post('/admin/sign-up', Middleware.admin, async (req, res) => {
 	var sha1 = require('crypto-js/sha1');
 	var sign_up = await Models.user.create({
@@ -299,11 +300,13 @@ app
 		res.status(401).redirect('/admin/sign-in');
 	}
 })
-// forgot password
+
+/**
+ * Forgot Password
+ */
 .get('/admin/forgot-password', Middleware.admin, (req, res) => {
 	res.render('admin/forgot-password.twig');
 })
-// forgot password post data
 .post('/admin/forgot-password', Middleware.admin, async (req, res) => {
 	var forgot_password = await Models.user.findOne({
 		where: {
@@ -322,7 +325,10 @@ app
 		res.status(401).redirect('/admin/sign-in');
 	}
 })
-// user profile
+
+/**
+ * User profile
+ */
 .get('/admin/user/:uid?', Middleware.admin, async (req, res) => {
 	res.locals.user_profile = await Models.user.findOne({
 		where: {
@@ -332,8 +338,10 @@ app
 	res.render('admin/profile.twig');
 })
 
+/**
+ * Page module
+ */
 .get('/admin/page/:option?/:id?', Middleware.admin, async (req, res) => {
-	var menu = 'page';
 	var mode;
 	var data_id = req.params.id;
 	var data = await new Promise(async (resolve, reject) => {
@@ -370,7 +378,7 @@ app
 		}
 	});
 
-	res.render('admin/page.twig', { data: data, menu: menu, mode: mode, data_id: data_id });
+	res.render('admin/page.twig', { data: data, active_menu: 'page', mode: mode, data_id: data_id });
 })
 .post('/admin/page/:option?/:id?', Middleware.admin, async (req, res) => {
 	if (req.params.option == undefined || req.params.option == 'add') {
@@ -400,13 +408,28 @@ app
 		res.json({ status: 'success' });
 	}
 })
+
+/**
+ * Live Chat Module
+ */
 .get('/admin/live_chat', Middleware.admin, (req, res) => {
 	res.render('admin/live_chat.twig', {
 		active_menu: 'live_chat'
 	});
 })
 
-// sign out
+/**
+ * Chat Bot Module
+ */
+.get('/admin/chat_bot', Middleware.admin, (req, res) => {
+	res.render('admin/chat_bot.twig', {
+		active_menu: 'chat_bot'
+	});
+})
+
+/**
+ * Sign Out
+ */
 .get('/admin/sign-out', Middleware.admin, (req, res) => {
 	req.session.destroy((err) => {
 		res.redirect('/admin/sign-in');
