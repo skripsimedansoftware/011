@@ -486,9 +486,10 @@ app
 				status: 'in-progress'
 			});
 
-			chat.chat_participant.update({
-				user: req.session.user_id
-			});
+			var chat_participant = await Models.chat_participant.findOne({ where: { chat_room_id: chat.get('id'), user_id: req.session.user_id }});
+			if (chat_participant == null) {
+				await Models.chat_participant.create({ chat_room_id: chat.get('id'), user_id: req.session.user_id });
+			}
 		}
 	}
 
@@ -512,7 +513,15 @@ app
 				model: Models.chat_participant,
 				include: [Models.guest, Models.user]
 			},
-			Models.chat_message
+			{
+				model: Models.chat_message,
+				include: [
+					{
+						model: Models.chat_participant,
+						include: [Models.guest, Models.user]
+					}
+				]
+			}
 		],
 		where: { status: 'in-progress' }
 	});
