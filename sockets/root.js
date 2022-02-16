@@ -36,14 +36,14 @@ io.of('/').on('connection', (socket) => {
 	 * Chat room message
 	 */
 	socket.on('chat-room-message', (data) => {
-		socket.to(parseInt(data.chat_room)).emit('chat-message', data.message);
+		socket.to(parseInt(data.room)).emit('chat-message', data.message);
 	});
 
 	/**
 	 * Chat room end session
 	 */
-	socket.on('chat-room-end', data => {
-		socket.to(parseInt(data)).emit('chat-room-end');
+	socket.on('chat-room-end', chat_room => {
+		socket.to(parseInt(chat_room)).emit('chat-room-end');
 	});
 
 	/**

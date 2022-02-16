@@ -194,6 +194,13 @@ $(document).ready(function() {
 	socket.on('visitors', data => {
 		$('.visitor_count').text(data);
 	});
+
+	socket.on('new_notification', (data) => {
+		var count = $($('.notification_count')[0]).text();
+		count = parseInt(count);
+		$('.notification_count').text(count+1);
+		$('.notification_list').append('<li><a href="'+data.link+'"><i class="fa fa-comments"></i>'+data.content+'</a></li>');
+	});
 });
 </script>
 {% block javascript %}{% endblock %}

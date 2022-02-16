@@ -1,6 +1,11 @@
 body {
 	padding-top: 50px;
 }
+
+.footer {
+	margin-bottom: 0%;
+}
+
 .starter-template {
 	padding: 40px 15px;
 	text-align: center;

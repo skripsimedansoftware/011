@@ -13,9 +13,9 @@
 			<li class="header">MAIN MENU</li>
 			<li class="{{ active_menu == 'home' ? 'active' : '' }}"><a href="/admin"><i class="fa fa-dashboard"></i> <span>Halaman Utama</span></a></li>
 			<li class="{{ active_menu == 'live_chat' ? 'active' : '' }}"><a href="/admin/live_chat"><i class="fa fa-comments"></i> <span>Live Chat</span></a></li>
-			<li class="treeview">
+			<li class="treeview {{ active_menu == 'chat_bot'?'active':'' }}">
 				<a href="#">
-					<i class="fa fa-cubes"></i> <span>Training Bot</span>
+					<i class="fa fa-cubes"></i> <span>Chat Bot</span>
 					<span class="pull-right-container">
 						<i class="fa fa-angle-left pull-right"></i>
 					</span>
