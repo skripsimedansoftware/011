@@ -32,11 +32,48 @@ io.of('/').on('connection', (socket) => {
 		});
 	});
 
+	socket.on('chat-room-join', (room) => {
+		socket.join(parseInt(room));
+	});
+
 	/**
 	 * Chat room message
 	 */
-	socket.on('chat-room-message', (data) => {
-		socket.to(parseInt(data.room)).emit('chat-message', data.message);
+	socket.on('chat-room-message', async (data) => {
+		if (data.from == 'guest') {
+			var participant = await Models.chat_participant.findOne({
+				include: Models.guest,
+				where: {
+					chat_room_id: data.room,
+					guest_id: data.sender
+				}
+			});
+		} else {
+			var participant = await Models.chat_participant.findOne({
+				include: Models.user,
+				where: {
+					chat_room_id: data.room,
+					user_id: data.sender
+				}
+			});
+		}
+
+		if (participant !== null) {
+			var chat_message = await Models.chat_message.create({
+				chat_room_id: data.room,
+				participant_id: participant.get('id'),
+				sender: data.from,
+				text: data.text
+			});
+
+			socket.to(parseInt(data.room)).emit('chat-room-message', {
+				room: data.room,
+				from: data.from,
+				name: (data.from == 'guest')?participant.guest.get('name'):participant.user.get('full_name'),
+				text: data.text,
+				time: moment(chat_message.get('created_at')).format('DD MMM YYYY HH:mm a')
+			});
+		}
 	});
 
 	/**

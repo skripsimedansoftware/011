@@ -20,19 +20,17 @@
 					<div class="box-header with-border">
 						<h3 class="box-title"><small>Obrolan #{{ chat.id }}</small></h3>
 						<div class="box-tools pull-right">
-							<span data-toggle="tooltip" title="3 New Messages" class="badge bg-green">3</span>
 							<button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
-							<button type="button" class="btn btn-box-tool" data-toggle="tooltip" title="Contacts" data-widget="chat-pane-toggle"><i class="fa fa-comments"></i></button>
 							<button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
 						</div>
 					</div>
 					<div class="box-body">
-						<div class="direct-chat-messages">
+						<div class="direct-chat-messages" chat-room="{{ chat.id }}">
 							{% for message in chat.chat_messages %}
 								<div class="direct-chat-msg {{ message.chat_participant.user is not null? 'right':'' }}">
 									<div class="direct-chat-info clearfix">
 										<span class="direct-chat-name {{ message.chat_participant.user is not null? 'pull-right':'pull-left' }}">{{ message.chat_participant.user is not null? message.chat_participant.user.full_name:message.chat_participant.guest.name }}</span>
-										<span class="direct-chat-timestamp {{ message.chat_participant.user is not null? 'pull-left':'pull-right' }}">23 Jan 2:00 pm</span>
+										<span class="direct-chat-timestamp {{ message.chat_participant.user is not null? 'pull-left':'pull-right' }}">{{ message.created_at|date('d M Y H:i a') }}</span>
 									</div>
 									<img class="direct-chat-img" src="/assets/adminLTE/v2/dist/img/user1-128x128.jpg" alt="Message User Image">
 									<div class="direct-chat-text">
@@ -40,25 +38,13 @@
 									</div>
 								</div>
 							{% endfor %}
-							<div class="direct-chat-msg">
-								<div class="direct-chat-info clearfix">
-									<span class="direct-chat-name pull-right">Sarah Bullock</span>
-									<span class="direct-chat-timestamp pull-left">23 Jan 2:05 pm</span>
-								</div>
-								<img class="direct-chat-img" src="/assets/adminLTE/v2/dist/img/user3-128x128.jpg" alt="Message User Image">
-								<div class="direct-chat-text">
-									You better believe it!
-								</div>
-							</div>
 						</div>
 					</div>
 					<div class="box-footer">
-						<form action="#" method="post">
+						<form class="chat-room" chat-room="{{ chat.id }}">
 							<div class="input-group">
-								<input type="text" name="message" placeholder="Type Message ..." class="form-control">
-								<span class="input-group-btn">
-								<button type="submit" class="btn btn-success btn-flat">Send</button>
-								</span>
+								<input type="text" name="message" chat-room="{{ chat.id }}" placeholder="Ketik Pesan ..." class="form-control">
+								<span class="input-group-btn"><button type="submit" class="btn btn-success btn-flat">Kirim</button></span>
 							</div>
 						</form>
 					</div>
@@ -67,4 +53,30 @@
 		{% endfor %}
 	</div>
 </section>
+{% endblock %}
+
+{% block javascript %}
+<script type="text/javascript">
+{% for chat in chats %}
+	socket.emit('chat-room-join', {{ chat.id }});
+{% endfor %}
+
+$('.chat-room').on('submit', function(e) {
+	e.preventDefault();
+	var room = $(this).attr('chat-room');
+	var text = $('input[chat-room="'+room+'"]').val().trim();
+
+	if (text.length > 0) {
+		socket.emit('chat-room-message', {
+			from: 'user',
+			room: room,
+			sender: {{ user.id }},
+			text: text
+		});
+
+		$('input[chat-room="'+room+'"]').val('');
+		$('.direct-chat-messages[chat-room="'+room+'"]').append(html_chat('user', '{{user.full_name}}', text, 'xx'));
+	}
+});
+</script>
 {% endblock %}

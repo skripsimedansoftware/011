@@ -27,10 +27,6 @@
 		<script src="/assets/jQuery/jquery-3.6.0.min.js"></script>
 		<script src="/assets/bootstrap/v3/dist/js/bootstrap.min.js"></script>
 		<script type="text/javascript">
-		$(document).ready(function() {
-
-		});
-
 		(function($) {
 			$(document).ready(function() {
 				var socket = io(window.location.host, {
@@ -39,6 +35,10 @@
 
 				socket.on('connect', () => {
 					console.log('connected');
+				});
+
+				socket.on('chat-room-message', (message) => {
+					html_chat(message.from, message.name, message.text, message.time);
 				});
 
 				var $chatbox = $('.chatbox'),
@@ -52,12 +52,10 @@
 				$chatboxTitleClose.on('click', function(e) {
 					e.stopPropagation();
 					$chatbox.toggleClass('chatbox--tray');
-					// $chatbox.addClass('chatbox--closed');
 				});
 
 				$chatbox.on('transitionend', function() {
 					if ($chatbox.hasClass('chatbox--closed')) {
-						// $chatbox.remove();
 						$chatbox.toggleClass('chatbox--tray');
 					}
 				});
@@ -69,9 +67,10 @@
 					success: function(data) {
 						if (data.status == 'success') {
 							if (data.room !== 'none') {
-								if (localStorage.getItem('chat_room') == null) {
-									localStorage.setItem('chat_room', data.room);
-								}
+								localStorage.setItem('chat_room', data.room);
+								localStorage.setItem('guest', data.guest);
+
+								socket.emit('chat-room-join', data.room);
 								$chatbox.removeClass('chatbox--empty');
 							}
 						}
@@ -91,7 +90,12 @@
 							whatsapp: $('#chat_auth_whatsapp').val()
 						},
 						success: function(data) {
-							console.log(data)
+							if (data.status == 'success') {
+								localStorage.setItem('chat_room', data.room);
+								localStorage.setItem('guest', data.guest);
+								socket.emit('chat-room-join', data.room);
+							}
+
 							$chatbox.removeClass('chatbox--empty');
 						}
 					});
@@ -101,8 +105,10 @@
 					if (e.which === 13 && !e.shiftKey) {
 						e.preventDefault();
 						socket.emit('chat-room-message', {
+							from: 'guest',
+							sender: localStorage.getItem('guest'),
 							room: localStorage.getItem('chat_room'),
-							message: $(this).val()
+							text: $(this).val()
 						});
 
 						$(this).val('');

@@ -177,30 +177,50 @@
 <script src="/assets/adminLTE/v2/dist/js/adminlte.min.js"></script>
 <script src="/ws/socket.io.min.js"></script>
 <script type="text/javascript">
-$(document).ready(function() {
-	$('.wysihtml5').wysihtml5();
-	var socket = io(window.location.host, {
-		path: '/ws'
-	});
+function html_chat(from, name, text, time) {
+	var direction = 'right'
+	if (from == 'guest') {
+		direction = 'left';
+	}
 
-	socket.on('connect', () => {
-		console.log('connected');
-	});
+	var time_direction = (direction == 'right')?'left':direction;
+	var html = '';
+	html += '<div class="direct-chat-msg '+direction+'">';
+	html += '<div class="direct-chat-info clearfix">';
+	html += '<span class="direct-chat-name pull-'+direction+'">'+name+'</span>';
+	html += '<span class="direct-chat-timestamp pull-'+time_direction+'">'+time+'</span>';
+	html += '</div>';
+	html += '<img class="direct-chat-img" src="/assets/adminLTE/v2/dist/img/user1-128x128.jpg" alt="Message User Image">';
+	html += '<div class="direct-chat-text">'+text+'</div>';
+	html += '</div>';
+	return html;
+}
 
-	socket.emit('assign_admin', function (visitors) {
-		$('.visitor_count').text(visitors);
-	});
+var socket = io(window.location.host, {
+	path: '/ws'
+});
 
-	socket.on('visitors', data => {
-		$('.visitor_count').text(data);
-	});
+socket.on('connect', () => {
+	console.log('connected');
+});
 
-	socket.on('new_notification', (data) => {
-		var count = $($('.notification_count')[0]).text();
-		count = parseInt(count);
-		$('.notification_count').text(count+1);
-		$('.notification_list').append('<li><a href="'+data.link+'"><i class="fa fa-comments"></i>'+data.content+'</a></li>');
-	});
+socket.emit('assign_admin', function (visitors) {
+	$('.visitor_count').text(visitors);
+});
+
+socket.on('visitors', data => {
+	$('.visitor_count').text(data);
+});
+
+socket.on('new_notification', (data) => {
+	var count = $($('.notification_count')[0]).text();
+	count = parseInt(count);
+	$('.notification_count').text(count+1);
+	$('.notification_list').append('<li><a href="'+data.link+'"><i class="fa fa-comments"></i>'+data.content+'</a></li>');
+});
+
+socket.on('chat-room-message', (message) => {
+	$('.direct-chat-messages[chat-room="'+message.room+'"]').append(html_chat(message.from, message.name, message.text, message.time));
 });
 </script>
 {% block javascript %}{% endblock %}

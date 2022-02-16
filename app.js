@@ -275,14 +275,16 @@ app.get('/', (req, res) => {
 			});
 
 			io.of('/').to('admin').emit('new_notification', notification);
-			req.session.chat = chat_room.get('id');
 
-			res.json({ status: 'success', code: 'chat_created', room: chat_room.get('id') });
+			req.session.chat = chat_room.get('id');
+			req.session.guest = guest.get('id');
+
+			res.json({ status: 'success', room: chat_room.get('id'), guest: req.session.guest });
 		} else {
-			res.json({ status: 'success', room: req.session.chat });
+			res.json({ status: 'success', room: req.session.chat, guest: req.session.guest });
 		}
 	} else if (req.params.option == 'status') {
-		res.json({ status: 'success', room: (req.session.chat !== undefined)?req.session.chat:'none' });
+		res.json({ status: 'success', room: (req.session.chat !== undefined)?req.session.chat:'none', guest: req.session.guest });
 	} else if (req.params.option == 'close') {
 		var chat = await Models.chat_room.findOne({
 			where: {

@@ -116,6 +116,10 @@ $('input[name="title"]').on('keyup', () => {
 
 
 <script type="text/javascript">
+$(document).ready(function() {
+	$('.wysihtml5').wysihtml5();
+});
+
 $('#page').on('submit', function(e) {
 	e.preventDefault();
 	$.ajax({
