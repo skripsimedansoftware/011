@@ -230,18 +230,37 @@ const Middleware = {
 	page: async (req, res, next) => {
 		res.locals.pages = await Models.page.findAll();
 		next();
+	},
+	chat: async (req, res, next) => {
+		if (req.session.chat !== undefined) {
+			res.locals.chat = await Models.chat_room.findOne({
+				include: {
+					model: Models.chat_message,
+					include: [
+						{
+							model: Models.chat_participant,
+							include: [Models.guest, Models.user]
+						}
+					]
+				},
+				where: { id: req.session.chat }
+			});
+
+		}
+
+		next();
 	}
 }
 
 app.use(Middleware.page);
 
 // Site routing
-app.get('/', (req, res) => {
+app.get('/', Middleware.chat, (req, res) => {
 	res.render('home.twig', {
 		name: 'Developer'
 	});
 })
-.get('/page/:slug', async (req, res) => {
+.get('/page/:slug', Middleware.chat, async (req, res) => {
 	var page = await Models.page.findOne({
 		where: {
 			slug: req.params.slug

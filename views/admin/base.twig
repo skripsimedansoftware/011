@@ -183,7 +183,7 @@ function html_chat(from, name, text, time) {
 		direction = 'left';
 	}
 
-	var time_direction = (direction == 'right')?'left':direction;
+	var time_direction = (direction == 'right')?'left':'right';
 	var html = '';
 	html += '<div class="direct-chat-msg '+direction+'">';
 	html += '<div class="direct-chat-info clearfix">';

@@ -236,26 +236,19 @@
 		</button>
 	</div>
 	<div class="chatbox__body">
-		<div class="chatbox__body__message chatbox__body__message--left">
-			<img src="/assets/adminLTE/v2/dist/img/user2-160x160.jpg" alt="Picture">
-			<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-		</div>
-		<div class="chatbox__body__message chatbox__body__message--right">
-			<img src="/assets/adminLTE/v2/dist/img/user2-160x160.jpg" alt="Picture">
-			<p>Nulla vel turpis vulputate, tincidunt lectus sed, porta arcu.</p>
-		</div>
-		<div class="chatbox__body__message chatbox__body__message--left">
-			<img src="/assets/adminLTE/v2/dist/img/user2-160x160.jpg" alt="Picture">
-			<p>Curabitur consequat nisl suscipit odio porta, ornare blandit ante maximus.</p>
-		</div>
-		<div class="chatbox__body__message chatbox__body__message--right">
-			<img src="/assets/adminLTE/v2/dist/img/user2-160x160.jpg" alt="Picture">
-			<p>Cras dui massa, placerat vel sapien sed, fringilla molestie justo.</p>
-		</div>
-		<div class="chatbox__body__message chatbox__body__message--right">
-			<img src="/assets/adminLTE/v2/dist/img/user2-160x160.jpg" alt="Picture">
-			<p>Praesent a gravida urna. Mauris eleifend, tellus ac fringilla imperdiet, odio dolor sodales libero, vel mattis elit mauris id erat. Phasellus leo nisi, convallis in euismod at, consectetur commodo urna.</p>
-		</div>
+		{% for message in chat.chat_messages %}
+			{% if message.sender == 'guest' %}
+			<div class="chatbox__body__message chatbox__body__message--right">
+				<img src="/assets/adminLTE/v2/dist/img/user2-160x160.jpg" alt="Picture">
+				<p>{{ message.text }}</p>
+			</div>
+			{% else %}
+			<div class="chatbox__body__message chatbox__body__message--left">
+				<img src="/assets/adminLTE/v2/dist/img/user2-160x160.jpg" alt="Picture">
+				<p>{{ message.text }}</p>
+			</div>
+			{% endif %}
+		{% endfor %}
 	</div>
 	<form class="chatbox__credentials">
 		<div class="form-group">
