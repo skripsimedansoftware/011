@@ -14,14 +14,19 @@
 {% block content %}
 <section class="content">
 	<div class="row">
+		<div class="col-lg-12">
+			<button class="btn btn-info">Train</button>
+		</div>
+	</div>
+	<div class="row">
 		{% for chat in chats %}
 			<div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
 				<div class="box box-success direct-chat direct-chat-success">
 					<div class="box-header with-border">
 						<h3 class="box-title"><small>Obrolan #{{ chat.id }}</small></h3>
 						<div class="box-tools pull-right">
-							<button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
-							<button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+							<button type="button" class="btn btn-box-tool" chat-id="{{ chat.id }}" data-widget="collapse"><i class="fa fa-minus"></i></button>
+							<button type="button" class="btn btn-box-tool" chat-id="{{ chat.id }}" data-option="remove"><i class="fa fa-times"></i></button>
 						</div>
 					</div>
 					<div class="box-body">
@@ -32,9 +37,9 @@
 										<span class="direct-chat-name {{ message.chat_participant.user is not null? 'pull-right':'pull-left' }}">{{ message.chat_participant.user is not null? message.chat_participant.user.full_name:message.chat_participant.guest.name }}</span>
 										<span class="direct-chat-timestamp {{ message.chat_participant.user is not null? 'pull-left':'pull-right' }}">{{ message.created_at|date('d M Y H:i a') }}</span>
 									</div>
-									<img class="direct-chat-img" src="/assets/adminLTE/v2/dist/img/user1-128x128.jpg" alt="Message User Image">
+									<img class="direct-chat-img" src="/assets/adminLTE/v2/dist/img/{{ message.chat_participant.user is not null ? 'user2-160x160.jpg':'user1-128x128.jpg' }}" alt="Message User Image">
 									<div class="direct-chat-text">
-										{{ message.text }}
+										{{ message.text|raw }}
 									</div>
 								</div>
 							{% endfor %}
@@ -61,6 +66,10 @@
 	socket.emit('chat-room-join', {{ chat.id }});
 {% endfor %}
 
+for (var chat = 0; chat < $('.direct-chat-messages').length; chat++) {
+	scrollBottomOfChat($($('.direct-chat-messages')[chat]).attr('chat-room'));
+}
+
 $('.chat-room').on('submit', function(e) {
 	e.preventDefault();
 	var room = $(this).attr('chat-room');
@@ -74,8 +83,46 @@ $('.chat-room').on('submit', function(e) {
 			text: text
 		});
 
+		var date = new Date;
+		var month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+		var time = date.getDate()+' '+month[date.getMonth()]+' '+date.getFullYear()+' '+(date.getHours() < 10 ? 0:'')+date.getHours()+':'+date.getMinutes()+(date.getHours() >= 12 ? ' pm':' am');
+
 		$('input[chat-room="'+room+'"]').val('');
-		$('.direct-chat-messages[chat-room="'+room+'"]').append(html_chat('user', '{{user.full_name}}', text, 'xx'));
+		$('.direct-chat-messages[chat-room="'+room+'"]').append(html_chat('user', '{{ user.full_name }}', text, time));
+		scrollBottomOfChat(room);
+	}
+});
+
+$('.btn-box-tool').on('click', function(event) {
+	event.preventDefault();
+	var option = $(this).attr('data-option');
+	var chat = $(this).attr('chat-id');
+	var _this = $(this);
+	if (option == 'remove') {
+		Swal.fire({
+			title: 'Anda yakin untuk mengakhiri obrolan?',
+			showDenyButton: true,
+			showCancelButton: true,
+			confirmButtonText: 'Ya',
+			denyButtonText: 'Tidak',
+		}).then((result) => {
+			/* Read more about isConfirmed, isDenied below */
+			if (result.isConfirmed) {
+				$.ajax({
+					url: '/chat_bot/close/'+chat,
+					type: 'POST',
+					dataType: 'JSON',
+					success: (data) => {
+						if (data.status == 'success') {
+							_this.parent().parent().parent().parent().remove();
+							Swal.fire('Obrolan Berakhir!', 'Obrolan telah diakhiri', 'success');
+						}
+					}
+				});
+			} else if (result.isDenied) {
+				Swal.fire('Obrolan Dilanjutkan', 'Pastikan menutup obrolan sesuai dengan ketentuan', 'info')
+			}
+		});
 	}
 });
 </script>

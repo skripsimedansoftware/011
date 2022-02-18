@@ -13,31 +13,7 @@
 			<li class="header">MAIN MENU</li>
 			<li class="{{ active_menu == 'home' ? 'active' : '' }}"><a href="/admin"><i class="fa fa-dashboard"></i> <span>Halaman Utama</span></a></li>
 			<li class="{{ active_menu == 'live_chat' ? 'active' : '' }}"><a href="/admin/live_chat"><i class="fa fa-comments"></i> <span>Live Chat</span></a></li>
-			<li class="treeview {{ active_menu == 'chat_bot'?'active':'' }}">
-				<a href="#">
-					<i class="fa fa-cubes"></i> <span>Chat Bot</span>
-					<span class="pull-right-container">
-						<i class="fa fa-angle-left pull-right"></i>
-					</span>
-				</a>
-				<ul class="treeview-menu">
-					<li><a href="/admin"><i class="fa fa-circle-o"></i> Kalimat</a></li>
-					<li><a href="/admin"><i class="fa fa-circle-o"></i> Kata Kunci</a></li>
-					<li><a href="/admin"><i class="fa fa-circle-o"></i> Pengaturan</a></li>
-				</ul>
-			</li>
-			<li class="treeview">
-				<a href="#">
-					<i class="fa fa-file-o"></i> <span>Data Pelayanan</span>
-					<span class="pull-right-container">
-						<i class="fa fa-angle-left pull-right"></i>
-					</span>
-				</a>
-				<ul class="treeview-menu">
-					<li><a href="/admin"><i class="fa fa-circle-o"></i> Pengurusan Dokumen</a></li>
-					<li><a href="/admin"><i class="fa fa-circle-o"></i> Pengurusan Izin</a></li>
-				</ul>
-			</li>
+			<li class="{{ active_menu == 'chat_bot' ? 'active' : '' }}"><a href="/admin/chat_bot"><i class="fa fa-compass"></i> <span>Chat Bot</span></a></li>
 			<li class="treeview {{ active_menu == 'page'?'active':'' }}">
 				<a href="/">
 					<i class="fa fa-file"></i> <span>Halaman</span>

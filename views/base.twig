@@ -29,13 +29,19 @@
 		<script type="text/javascript">
 		function html_chat(from, text) {
 			var direction = (from == 'user')?'left':'right';
+			var photo = (from == 'user')?'user2-160x160.jpg':'user1-128x128.jpg';
 			var html = '';
 			html += '<div class="chatbox__body__message chatbox__body__message--'+direction+'">';
-			html += '<img src="/assets/adminLTE/v2/dist/img/user2-160x160.jpg" alt="Picture">';
+			html += '<img src="/assets/adminLTE/v2/dist/img/'+photo+'" alt="Picture">';
 			html += '<p>'+text+'</p>';
 			html += '</div>';
 			return html;
 		}
+
+		function scrollBottomOfChat () {
+			$('.chatbox__body').prop('scrollTop', ($('.chatbox__body').prop('scrollHeight')-$('.chatbox__body').prop('clientHeight')));
+		}
+
 		(function($) {
 			$(document).ready(function() {
 				var socket = io(window.location.host, {
@@ -48,6 +54,7 @@
 
 				socket.on('chat-room-message', (message) => {
 					$('.chatbox__body').append(html_chat(message.from, message.text));
+					scrollBottomOfChat()
 				});
 
 				var $chatbox = $('.chatbox'),
@@ -81,6 +88,7 @@
 
 								socket.emit('chat-room-join', data.room);
 								$chatbox.removeClass('chatbox--empty');
+								scrollBottomOfChat();
 							}
 						}
 					},
@@ -124,6 +132,7 @@
 						if (text.length > 0) {
 							$('.chatbox__body').append(html_chat('guest', text));
 							$(this).val('');
+							scrollBottomOfChat();
 						}
 					}
 				});

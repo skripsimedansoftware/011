@@ -21,10 +21,22 @@ const session = express_session({
 const io = require('socket.io')(http, { path: '/ws' });
 io.use(express_socketio_session(session, { autoSave: true })); // Initialize expressjs session with socket.io
 
+global.trained = new Array();
 global.visitors = new Array();
 global.admins = new Array();
 
 // Set global variable
+global.Naive_Bayes = require('wink-naive-bayes-text-classifier')();
+global.NLP = require('wink-nlp-utils');
+Naive_Bayes.defineConfig({ considerOnlyPresence: true, smoothingFactor: 0.5 });
+Naive_Bayes.definePrepTasks([
+	// Simple tokenizer
+	NLP.string.tokenize0,
+	// Common Stop Words Remover
+	NLP.tokens.removeWords,
+	// Stemmer to obtain base word
+	NLP.tokens.stem
+]);
 global.DB;
 global.io = io;
 global.Models;
@@ -254,7 +266,9 @@ const Middleware = {
 
 app.use(Middleware.page);
 
-// Site routing
+/**
+ * Site routing
+ */
 app.get('/', Middleware.chat, (req, res) => {
 	res.render('home.twig', {
 		name: 'Developer'
@@ -271,11 +285,26 @@ app.get('/', Middleware.chat, (req, res) => {
 		page: page
 	});
 })
+.get('/chat_bot', async (req, res) => {
+	Models.training_question.findAll().then(questions => {
+		questions.forEach((question, index) => {
+			if (trained.indexOf(question.id) == -1) {
+				Naive_Bayes.learn(question.text, question.category);
+				trained.push(question.id);
+			}
 
+			if ((index+1) == questions.length) {
+				Naive_Bayes.consolidate();
+			}
+		});
+	});
+
+	res.json({ status: 'success' });
+})
 .post('/chat_bot/:option?/:id?', async (req, res) => {
 	if (req.params.option == 'start') {
 		if (req.session.chat == undefined) {
-			var chat_room = await Models.chat_room.create({ pending_answer: false, status: 'opened' });
+			var chat_room = await Models.chat_room.create({ status: 'opened' });
 			var guest = await Models.guest.create({
 				name: (req.body.name !== undefined)?req.body.name:null,
 				email: (req.body.email !== undefined)?req.body.email:null,
@@ -307,7 +336,7 @@ app.get('/', Middleware.chat, (req, res) => {
 	} else if (req.params.option == 'close') {
 		var chat = await Models.chat_room.findOne({
 			where: {
-				id: req.session.chat
+				id: req.params.id
 			}
 		});
 
@@ -324,8 +353,16 @@ app
 /**
  * Dashboard
  */
-.get('/admin', Middleware.admin, Middleware.notification, (req, res) => {
+.get('/admin', Middleware.admin, Middleware.notification, async (req, res) => {
 	res.render('admin/home.twig', {
+		widget: {
+			chat: {
+				all: await Models.chat_room.count(),
+				in_progress: await Models.chat_room.count({ where: { status: 'in-progress' } }),
+				closed: await Models.chat_room.count({ where: { status: 'closed' } })
+			},
+			page: await Models.page.count()
+		},
 		active_menu: 'home'
 	});
 })
@@ -556,10 +593,92 @@ app
 /**
  * Chat Bot Module
  */
-.get('/admin/chat_bot', Middleware.admin, Middleware.notification, (req, res) => {
-	res.render('admin/chat_bot.twig', {
-		active_menu: 'chat_bot'
-	});
+.get('/admin/chat_bot/:type?/:id?', Middleware.admin, Middleware.notification, async (req, res) => {
+	if (req.params.type == undefined) {
+		var categories = await Models.training_question.findAll({
+			attributes: [ [DB.Sequelize.fn('DISTINCT', DB.Sequelize.col('category')) ,'category'] ]
+		});
+
+		res.render('admin/chat_bot.twig', {
+			active_menu: 'chat_bot',
+			categories: categories,
+			questions: await Models.training_question.findAll(),
+			answers: await Models.training_answer.findAll()
+		});
+	} else {
+		if (req.params.type == 'question') {
+			if (req.params.id !== undefined) {
+				res.json({
+					status: 'success',
+					data: await Models.training_question.findOne({ where: { id: req.params.id } })
+				});
+			} else {
+				res.json({
+					status: 'success',
+					data: await Models.training_question.findAll()
+				});
+			}
+		} else {
+			if (req.params.id !== undefined) {
+				res.json({
+					status: 'success',
+					data: await Models.training_answer.findOne({ where: { id: req.params.id } })
+				});
+			} else {
+				res.json({
+					status: 'success',
+					data: await Models.training_answer.findAll()
+				});
+			}
+		}
+	}
+})
+.post('/admin/chat_bot/:type/:option?/:id?', Middleware.admin, Middleware.notification, async (req, res) => {
+	if (req.params.type == 'question') {
+		if (req.params.option == 'add') {
+			var question = await Models.training_question.create({
+				category: req.body.category.trim(),
+				text: req.body.text.trim()
+			});
+
+			res.json({ status: 'success', data: question });
+		} else if (req.params.option == 'edit') {
+			var question = await Models.training_question.findOne({ where: { id: req.params.id } });
+			if (question !== null) {
+				question.update({
+					category: req.body.category.trim(),
+					text: req.body.text.trim()
+				});
+			}
+
+			res.json({ status: 'success', data: await Models.training_question.findOne({ where: { id: req.params.id } }) });
+		} else {
+			await Models.training_question.destroy({ where: { id: req.params.id } });
+			res.json({ status: 'success' });
+		}
+	} else {
+		if (req.params.option == 'add') {
+			var answer = await Models.training_answer.create({
+				category: req.body.category.trim(),
+				text: req.body.text.trim()
+			});
+
+			res.json({ status: 'success', data: answer });
+		} else if (req.params.option == 'edit') {
+			var answer = await Models.training_answer.findOne({ where: { id: req.params.id } });
+			if (answer !== null) {
+				answer.update({
+					category: req.body.category.trim(),
+					text: req.body.text.trim()
+				});
+			}
+
+			res.json({ status: 'success', data: await Models.training_answer.findOne({ where: { id: req.params.id } }) });
+		} else {
+			await Models.training_answer.destroy({ where: { id: req.params.id } });
+			res.json({ status: 'success' });
+		}
+	}
 })
 
 /**

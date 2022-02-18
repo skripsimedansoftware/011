@@ -28,6 +28,12 @@
 	<!-- bootstrap wysihtml5 - text editor -->
 	<link rel="stylesheet" href="/assets/adminLTE/v2/plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.min.css">
 
+	<link rel="stylesheet" href="/assets/SweetAlert2/sweetalert2.min.css">
+
+	<style type="text/css">
+	.swal2-popup { font-size: 1.6rem !important; }
+	</style>
+
 	<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
 	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
 	<!--[if lt IE 9]>
@@ -175,6 +181,8 @@
 <script src="/assets/adminLTE/v2/bower_components/fastclick/lib/fastclick.js"></script>
 <!-- AdminLTE App -->
 <script src="/assets/adminLTE/v2/dist/js/adminlte.min.js"></script>
+
+<script src="/assets/SweetAlert2/sweetalert2.min.js"></script>
 <script src="/ws/socket.io.min.js"></script>
 <script type="text/javascript">
 function html_chat(from, name, text, time) {
@@ -184,16 +192,21 @@ function html_chat(from, name, text, time) {
 	}
 
 	var time_direction = (direction == 'right')?'left':'right';
+	var photo = (from == 'user')?'user2-160x160.jpg':'user1-128x128.jpg';
 	var html = '';
 	html += '<div class="direct-chat-msg '+direction+'">';
 	html += '<div class="direct-chat-info clearfix">';
 	html += '<span class="direct-chat-name pull-'+direction+'">'+name+'</span>';
 	html += '<span class="direct-chat-timestamp pull-'+time_direction+'">'+time+'</span>';
 	html += '</div>';
-	html += '<img class="direct-chat-img" src="/assets/adminLTE/v2/dist/img/user1-128x128.jpg" alt="Message User Image">';
+	html += '<img class="direct-chat-img" src="/assets/adminLTE/v2/dist/img/'+photo+'" alt="Message User Image">';
 	html += '<div class="direct-chat-text">'+text+'</div>';
 	html += '</div>';
 	return html;
+}
+
+function scrollBottomOfChat (id) {
+	$('.direct-chat-messages[chat-room="'+id+'"]').prop('scrollTop', ($('.direct-chat-messages[chat-room="'+id+'"]').prop('scrollHeight')-$('.direct-chat-messages[chat-room="'+id+'"]').prop('clientHeight')));
 }
 
 var socket = io(window.location.host, {
@@ -201,7 +214,7 @@ var socket = io(window.location.host, {
 });
 
 socket.on('connect', () => {
-	console.log('connected');
+
 });
 
 socket.emit('assign_admin', function (visitors) {
@@ -221,6 +234,7 @@ socket.on('new_notification', (data) => {
 
 socket.on('chat-room-message', (message) => {
 	$('.direct-chat-messages[chat-room="'+message.room+'"]').append(html_chat(message.from, message.name, message.text, message.time));
+	scrollBottomOfChat(message.room);
 });
 </script>
 {% block javascript %}{% endblock %}

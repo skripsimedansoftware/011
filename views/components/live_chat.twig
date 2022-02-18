@@ -239,13 +239,13 @@
 		{% for message in chat.chat_messages %}
 			{% if message.sender == 'guest' %}
 			<div class="chatbox__body__message chatbox__body__message--right">
-				<img src="/assets/adminLTE/v2/dist/img/user2-160x160.jpg" alt="Picture">
+				<img src="/assets/adminLTE/v2/dist/img/user1-128x128.jpg" alt="Picture">
 				<p>{{ message.text }}</p>
 			</div>
 			{% else %}
 			<div class="chatbox__body__message chatbox__body__message--left">
 				<img src="/assets/adminLTE/v2/dist/img/user2-160x160.jpg" alt="Picture">
-				<p>{{ message.text }}</p>
+				<p>{{ message.text|raw }}</p>
 			</div>
 			{% endif %}
 		{% endfor %}

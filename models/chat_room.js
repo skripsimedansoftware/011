@@ -7,10 +7,6 @@ module.exports = function(DataTypes) {
 				primaryKey: true,
 				autoIncrement: true
 			},
-			pending_answer: {
-				type: DataTypes.BOOLEAN,
-				allowNull: true
-			},
 			status: {
 				type: DataTypes.ENUM('opened', 'in-progress', 'closed'),
 				allowNull: false

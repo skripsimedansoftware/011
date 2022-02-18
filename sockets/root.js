@@ -1,3 +1,4 @@
+
 io.of('/').on('connection', (socket) => {
 	if (visitors.indexOf(socket.id) == -1) { // if data not available in global variable
 		visitors.push(socket.id) // add to global variable
@@ -65,6 +66,62 @@ io.of('/').on('connection', (socket) => {
 				sender: data.from,
 				text: data.text
 			});
+
+			var chat = await Models.chat_room.findOne({
+				where: {
+					id: data.room
+				}
+			});
+
+			if (data.from == 'guest') {
+
+				if (admins.length < 1) {
+					if (chat !== null) {
+						var predict = Naive_Bayes.predict(data.text);
+						var answer = await Models.training_answer.findOne({
+							where: {
+								category: predict
+							}
+						});
+
+						var chat_participant = await Models.chat_participant.findOne({ where: { chat_room_id: chat.get('id'), user_id: 2 }});
+						if (chat_participant == null) {
+							chat_participant = await Models.chat_participant.create({ chat_room_id: chat.get('id'), user_id: 2 });
+						}
+
+						if (answer == null) {
+							answer = 'Maaf, saya tidak mengerti yang anda maksud';
+							answer += '<br><br><small>Dibalas oleh bot</small>';
+						} else {
+							answer = answer.get('text');
+							answer += '<br><br><small>Dibalas oleh bot</small>';
+						}
+
+						var chat_message = await Models.chat_message.create({
+							chat_room_id: chat.get('id'),
+							participant_id: chat_participant.get('id'),
+							sender: 'user',
+							text: answer
+						});
+
+						var bot = await Models.chat_participant.findOne({
+							include: Models.user,
+							where: {
+								chat_room_id: chat.get('id'),
+								user_id: 2
+							}
+						});
+
+						io.of('/').to(parseInt(chat.get('id'))).emit('chat-room-message', {
+							room: chat.get('id'),
+							from: 'user',
+							name: bot.user.get('full_name'),
+							text: answer,
+							time: moment(chat_message.get('created_at')).format('DD MMM YYYY HH:mm a')
+						});
+					}
+				}
+			}
 
 			socket.to(parseInt(data.room)).emit('chat-room-message', {
 				room: data.room,
