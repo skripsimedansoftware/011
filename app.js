@@ -362,6 +362,10 @@ app
 				in_progress: await Models.chat_room.count({ where: { status: 'in-progress' } }),
 				closed: await Models.chat_room.count({ where: { status: 'closed' } })
 			},
+			data_training: {
+				question: await Models.training_question.count(),
+				answer: await Models.training_answer.count()
+			},
 			page: await Models.page.count()
 		},
 		active_menu: 'home'
