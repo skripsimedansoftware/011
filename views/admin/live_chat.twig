@@ -57,10 +57,6 @@
 
 {% block javascript %}
 <script type="text/javascript">
-{% for chat in chats %}
-	socket.emit('chat-room-join', {{ chat.id }});
-{% endfor %}
-
 for (var chat = 0; chat < $('.direct-chat-messages').length; chat++) {
 	scrollBottomOfChat($($('.direct-chat-messages')[chat]).attr('chat-room'));
 }

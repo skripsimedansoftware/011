@@ -203,6 +203,7 @@ app.use((req, res, next) => {
 // ExpressJs middleware
 const Middleware = {
 	admin: async (req, res, next) => {
+		res.locals.uri_paths = req.originalUrl.split('/');
 		if (req.originalUrl.match(/^\/admin(\/)?.*/)) {
 			var auth_pages = /\/(sign-in|sign-up|forgot-password|recover-account|confirm-code)\/?/;
 			if (typeof req.session.user_id == 'undefined') {

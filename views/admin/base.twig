@@ -213,9 +213,9 @@ var socket = io(window.location.host, {
 	path: '/ws'
 });
 
-socket.on('connect', () => {
-
-});
+{% for chat in chats %}
+	socket.emit('chat-room-join', {{ chat.id }});
+{% endfor %}
 
 socket.emit('assign_admin', function (visitors) {
 	$('.visitor_count').text(visitors);
@@ -233,7 +233,27 @@ socket.on('new_notification', (data) => {
 });
 
 socket.on('chat-room-message', (message) => {
-	$('.direct-chat-messages[chat-room="'+message.room+'"]').append(html_chat(message.from, message.name, message.text, message.time));
+	if ('{{ uri_paths[1] }}' !== 'live_chat') {
+		var html = '';
+		html += '<li>';
+			html += '<a href="/admin/live_chat">';
+				html += '<div class="pull-left">';
+					html += '<img src="/assets/adminLTE/v2/dist/img/user1-128x128.jpg" class="img-circle" alt="User Image">';
+				html += '</div>';
+				html += '<h4>';
+					html += message.name;
+					html += '<small><i class="fa fa-clock-o"></i> '+message.time+'</small>';
+				html += '</h4>';
+				html += '<p>'+message.text+'</p>';
+			html += '</a>';
+		html += '</li>';
+
+		var count = parseInt($($('.message_count')[0]).text());
+		$('.message_count').text((count+1));
+		$('ul.message_list').append(html);
+	} else {
+		$('.direct-chat-messages[chat-room="'+message.room+'"]').append(html_chat(message.from, message.name, message.text, message.time));
+	}
 	scrollBottomOfChat(message.room);
 });
 </script>
