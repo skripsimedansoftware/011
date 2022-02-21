@@ -27,6 +27,7 @@
 		<script src="/assets/jQuery/jquery-3.6.0.min.js"></script>
 		<script src="/assets/bootstrap/v3/dist/js/bootstrap.min.js"></script>
 		<script type="text/javascript">
+		var message_received = new Audio('/assets/sounds/message-received.mp3');
 		function html_chat(from, text) {
 			var direction = (from == 'user')?'left':'right';
 			var photo = (from == 'user')?'user2-160x160.jpg':'user1-128x128.jpg';
@@ -48,13 +49,10 @@
 					path: '/ws'
 				});
 
-				socket.on('connect', () => {
-					console.log('connected');
-				});
-
 				socket.on('chat-room-message', (message) => {
 					$('.chatbox__body').append(html_chat(message.from, message.text));
-					scrollBottomOfChat()
+					message_received.play();
+					scrollBottomOfChat();
 				});
 
 				var $chatbox = $('.chatbox'),

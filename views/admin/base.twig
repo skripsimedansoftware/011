@@ -185,6 +185,11 @@
 <script src="/assets/SweetAlert2/sweetalert2.min.js"></script>
 <script src="/ws/socket.io.min.js"></script>
 <script type="text/javascript">
+
+var notification_received = new Audio('/assets/sounds/notification-received.mp3');
+var message_received = new Audio('/assets/sounds/message-received.mp3');
+var new_visitor = new Audio('/assets/sounds/new-visitor.wav');
+
 function html_chat(from, name, text, time) {
 	var direction = 'right'
 	if (from == 'guest') {
@@ -222,6 +227,7 @@ socket.emit('assign_admin', function (visitors) {
 });
 
 socket.on('visitors', data => {
+	new_visitor.play();
 	$('.visitor_count').text(data);
 });
 
@@ -230,6 +236,7 @@ socket.on('new_notification', (data) => {
 	count = parseInt(count);
 	$('.notification_count').text(count+1);
 	$('.notification_list').append('<li><a href="'+data.link+'"><i class="fa fa-comments"></i>'+data.content+'</a></li>');
+	notification_received.play();
 });
 
 socket.on('chat-room-message', (message) => {
@@ -254,6 +261,9 @@ socket.on('chat-room-message', (message) => {
 	} else {
 		$('.direct-chat-messages[chat-room="'+message.room+'"]').append(html_chat(message.from, message.name, message.text, message.time));
 	}
+
+	message_received.play();
+
 	scrollBottomOfChat(message.room);
 });
 </script>
