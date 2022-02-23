@@ -14,10 +14,6 @@ module.exports = function(DataTypes) {
 				type: DataTypes.STRING(80),
 				allowNull: true
 			},
-			phone: {
-				type: DataTypes.STRING(20),
-				allowNull: true
-			},
 			whatsapp: {
 				type: DataTypes.STRING(20),
 				allowNull: true

@@ -21,10 +21,6 @@ module.exports = function(DataTypes) {
 			text: {
 				type: DataTypes.STRING,
 				allowNull: true
-			},
-			attachment: {
-				type: DataTypes.STRING,
-				allowNull: true
 			}
 		},
 		associate: [

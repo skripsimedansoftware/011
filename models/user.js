@@ -10,10 +10,6 @@ module.exports = function(DataTypes) {
 				type: DataTypes.ENUM('admin', 'user'),
 				allowNull: false
 			},
-			id_card: {
-				type: DataTypes.STRING(40),
-				allowNull: true
-			},
 			email: {
 				type: DataTypes.STRING(40),
 				allowNull: true
