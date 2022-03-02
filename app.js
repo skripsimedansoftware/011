@@ -13,10 +13,10 @@ const moment_duration = require('moment-duration-format'); // MomentJs duration 
 // Initialize expressJs session
 const session = express_session({
 	store: new FileStore(),
-	secret: 'my-secret-key',
-	resave: true,
+	secret: 'MedanSoftware',
+	resave: false,
 	saveUninitialized: true,
-	cookie: { secure: false, maxAge: Date.now() + (30 * 86400 * 1000) }
+	// cookie: { secure: false, maxAge: Date.now() + (30 * 86400 * 1000) }
 });
 const io = require('socket.io')(http, { path: '/ws' });
 io.use(express_socketio_session(session, { autoSave: true })); // Initialize expressjs session with socket.io
@@ -25,18 +25,6 @@ global.trained = new Array();
 global.visitors = new Array();
 global.admins = new Array();
 
-// Set global variable
-global.Naive_Bayes = require('wink-naive-bayes-text-classifier')();
-global.NLP = require('wink-nlp-utils');
-Naive_Bayes.defineConfig({ considerOnlyPresence: true, smoothingFactor: 0.5 });
-Naive_Bayes.definePrepTasks([
-	// Simple tokenizer
-	NLP.string.tokenize0,
-	// Common Stop Words Remover
-	NLP.tokens.removeWords,
-	// Stemmer to obtain base word
-	NLP.tokens.stem
-]);
 global.DB;
 global.io = io;
 global.Models;
@@ -164,8 +152,8 @@ app.set('view engine', 'twig'); // Initialize view engine to twig
 app.use(cors({ origin : (origin, callback) => { callback(null, true) }, credentials: true })); // Initialize HTTP CORS
 app.use((req, res, next) => {
 	res.locals.app = {
-		name: 'Chat Bot NLP',
-		vendor: 'Kesuma Dwi Ningtyas',
+		name: 'Kelurahan Medan Tenggara',
+		vendor: 'Kesuma Dwi Ningtyas', // 0851-5603-3913
 		version: 'v1.0.0'
 	}
 
@@ -241,7 +229,32 @@ const Middleware = {
 		next();
 	},
 	page: async (req, res, next) => {
-		res.locals.pages = await Models.page.findAll();
+		res.locals.pages = await Models.post.findAll({
+			where: {
+				type: 'page'
+			}
+		});
+		next();
+	},
+	chats: async (req, res, next) => {
+		res.locals.chats = await Models.chat_room.findAll({
+			include: [
+				{
+					model: Models.chat_participant,
+					include: [Models.guest, Models.user]
+				},
+				{
+					model: Models.chat_message,
+					include: [
+						{
+							model: Models.chat_participant,
+							include: [Models.guest, Models.user]
+						}
+					]
+				}
+			],
+			where: { status: 'in-progress' }
+		});
 		next();
 	},
 	chat: async (req, res, next) => {
@@ -275,31 +288,45 @@ app.get('/', Middleware.chat, (req, res) => {
 		name: 'Developer'
 	});
 })
-.get('/page/:slug', Middleware.chat, async (req, res) => {
-	var page = await Models.page.findOne({
-		where: {
-			slug: req.params.slug
-		}
+.get('/post/:slug?', Middleware.chat, async (req, res) => {
+	if (req.params.slug == undefined) {
+		var post = await Models.post.findAll({
+			where: {
+				type: 'post'
+			}
+		});
+	} else {
+		var post = await Models.post.findOne({
+			where: {
+				slug: req.params.slug
+			}
+		});
+	}
+
+	res.render('post.twig', {
+		post: post
 	});
+})
+.get('/page/:slug?', Middleware.chat, async (req, res) => {
+	if (req.params.slug == undefined) {
+		var page = await Models.post.findAll({
+			where: {
+				type: 'page'
+			}
+		});
+	} else {
+		var page = await Models.post.findOne({
+			where: {
+				slug: req.params.slug
+			}
+		});
+	}
 
 	res.render('page.twig', {
 		page: page
 	});
 })
 .get('/chat_bot', async (req, res) => {
-	Models.training_question.findAll().then(questions => {
-		questions.forEach((question, index) => {
-			if (trained.indexOf(question.id) == -1) {
-				Naive_Bayes.learn(question.text, question.category);
-				trained.push(question.id);
-			}
-
-			if ((index+1) == questions.length) {
-				Naive_Bayes.consolidate();
-			}
-		});
-	});
-
 	res.json({ status: 'success' });
 })
 .post('/chat_bot/:option?/:id?', async (req, res) => {
@@ -354,7 +381,7 @@ app
 /**
  * Dashboard
  */
-.get('/admin', Middleware.admin, Middleware.notification, async (req, res) => {
+.get('/admin', Middleware.admin, Middleware.notification, Middleware.chats, async (req, res) => {
 	res.render('admin/home.twig', {
 		widget: {
 			chat: {
@@ -366,7 +393,7 @@ app
 				question: await Models.training_question.count(),
 				answer: await Models.training_answer.count()
 			},
-			page: await Models.page.count()
+			page: await Models.post.count()
 		},
 		active_menu: 'home'
 	});
@@ -375,10 +402,10 @@ app
 /**
  * Sign in
  */
-.get('/admin/sign-in', Middleware.admin, Middleware.notification, (req, res) => {
+.get('/admin/sign-in', Middleware.admin, Middleware.notification, Middleware.chats, (req, res) => {
 	res.render('admin/sign-in.twig');
 })
-.post('/admin/sign-in', Middleware.admin, Middleware.notification, async (req, res) => {
+.post('/admin/sign-in', Middleware.admin, Middleware.notification, Middleware.chats, async (req, res) => {
 	var sha1 = require('crypto-js/sha1');
 	var sign_in = await Models.user.findOne({
 		where: {
@@ -403,10 +430,10 @@ app
 /**
  * Sign Up
  */
-.get('/admin/sign-up', Middleware.admin, Middleware.notification, (req, res) => {
+.get('/admin/sign-up', Middleware.admin, Middleware.notification, Middleware.chats, (req, res) => {
 	res.render('admin/sign-up.twig');
 })
-.post('/admin/sign-up', Middleware.admin, Middleware.notification, async (req, res) => {
+.post('/admin/sign-up', Middleware.admin, Middleware.notification, Middleware.chats, async (req, res) => {
 	var sha1 = require('crypto-js/sha1');
 	var sign_up = await Models.user.create({
 		email: req.body.email,
@@ -415,11 +442,10 @@ app
 		full_name: req.body.full_name
 	});
 
+	req.flash('sign_up', true);
 	if (sign_up) {
-		req.flash('sign_up', true);
 		res.redirect('/admin/sign-in');
 	} else {
-		req.flash('sign_up', true);
 		res.status(401).redirect('/admin/sign-in');
 	}
 })
@@ -427,10 +453,10 @@ app
 /**
  * Forgot Password
  */
-.get('/admin/forgot-password', Middleware.admin, Middleware.notification, (req, res) => {
+.get('/admin/forgot-password', Middleware.admin, Middleware.notification, Middleware.chats, (req, res) => {
 	res.render('admin/forgot-password.twig');
 })
-.post('/admin/forgot-password', Middleware.admin, Middleware.notification, async (req, res) => {
+.post('/admin/forgot-password', Middleware.admin, Middleware.notification, Middleware.chats, async (req, res) => {
 	var forgot_password = await Models.user.findOne({
 		where: {
 			[DB.Op.or]: [
@@ -452,7 +478,7 @@ app
 /**
  * User profile
  */
-.get('/admin/user/:uid?', Middleware.admin, Middleware.notification, async (req, res) => {
+.get('/admin/user/:uid?', Middleware.admin, Middleware.notification, Middleware.chats, async (req, res) => {
 	res.locals.user_profile = await Models.user.findOne({
 		where: {
 			id: (req.params.uid !== undefined)?req.params.uid:res.locals.user.id
@@ -464,34 +490,34 @@ app
 /**
  * Page module
  */
-.get('/admin/page/:option?/:id?', Middleware.admin, Middleware.notification, async (req, res) => {
+.get('/admin/post/:option?/:id?', Middleware.admin, Middleware.notification, Middleware.chats, async (req, res) => {
 	var mode;
 	var data_id = req.params.id;
 	var data = await new Promise(async (resolve, reject) => {
 		if ((req.params.option == 'view' || req.params.option == undefined) && req.params.id == undefined) {
 			mode = 'list';
-			resolve(await Models.page.findAll());
+			resolve(await Models.post.findAll());
 		} else if (req.params.option == 'view' && req.params.id !== undefined) {
 			mode = 'view';
-			resolve(await Models.page.findOne({
+			resolve(await Models.post.findOne({
 				where: {
 					id: req.params.id
 				}
 			}));
 		} else if (req.params.option == 'delete' && req.params.id !== undefined) {
-			var page = await Models.page.findOne({
+			var post = await Models.post.findOne({
 				where: {
 					id: req.params.id
 				}
 			});
-			page.destroy();
-			res.redirect('/admin/page');
+			post.destroy();
+			res.redirect('/admin/post');
 		} else if (req.params.option == 'new') {
 			mode = 'new';
 			resolve(true);
 		} else if (req.params.option == 'edit' && req.params.id !== undefined) {
 			mode = 'edit';
-			resolve(await Models.page.findOne({
+			resolve(await Models.post.findOne({
 				where: {
 					id: req.params.id
 				}
@@ -501,41 +527,41 @@ app
 		}
 	});
 
-	res.render('admin/page.twig', { data: data, active_menu: 'page', mode: mode, data_id: data_id });
+	res.render('admin/post.twig', { data: data, active_menu: 'post', mode: mode, data_id: data_id });
 })
-.post('/admin/page/:option?/:id?', Middleware.admin, Middleware.notification, async (req, res) => {
+.post('/admin/post/:option?/:id?', Middleware.admin, Middleware.notification, Middleware.chats, async (req, res) => {
+	var data = null;
 	if (req.params.option == undefined || req.params.option == 'add') {
-		await Models.page.create({
+		Models.post.create({
+			type: req.body.type,
 			title: req.body.title,
 			slug: req.body.slug,
 			content: req.body.content
-		});
-
-		res.json({ status: 'success' });
+		}).then(console.log).catch(console.log);
 	} else if (req.params.option == 'edit') {
-		var page = await Models.page.findOne({
+		var post = await Models.post.findOne({
 			where: {
 				id: req.params.id
 			}
 		});
 
-		if (page !== null) {
-			await page.update({
-				name: req.body.name,
+		if (post !== null) {
+			post.update({
+				type: req.body.type,
 				title: req.body.title,
 				slug: req.body.slug,
 				content: req.body.content
-			});
+			}).then(console.log).catch(console.log);
 		}
-
-		res.json({ status: 'success' });
 	}
+
+	res.json({ status: 'success'});
 })
 
 /**
  * Live Chat Module
  */
-.get('/admin/live_chat/:id?', Middleware.admin, Middleware.notification, async (req, res) => {
+.get('/admin/live_chat/:id?', Middleware.admin, Middleware.notification, Middleware.chats, async (req, res) => {
 	if (req.params.id !== undefined) {
 		var chat = await Models.chat_room.findOne({
 			where: {
@@ -570,27 +596,7 @@ app
 		}
 	}
 
-	var chats = await Models.chat_room.findAll({
-		include: [
-			{
-				model: Models.chat_participant,
-				include: [Models.guest, Models.user]
-			},
-			{
-				model: Models.chat_message,
-				include: [
-					{
-						model: Models.chat_participant,
-						include: [Models.guest, Models.user]
-					}
-				]
-			}
-		],
-		where: { status: 'in-progress' }
-	});
-
 	res.render('admin/live_chat.twig', {
-		chats: chats,
 		active_menu: 'live_chat'
 	});
 })
@@ -598,7 +604,7 @@ app
 /**
  * Chat Bot Module
  */
-.get('/admin/chat_bot/:type?/:id?', Middleware.admin, Middleware.notification, async (req, res) => {
+.get('/admin/chat_bot/:type?/:id?', Middleware.admin, Middleware.notification, Middleware.chats, async (req, res) => {
 	if (req.params.type == undefined) {
 		var categories = await Models.training_question.findAll({
 			attributes: [ [DB.Sequelize.fn('DISTINCT', DB.Sequelize.col('category')) ,'category'] ]
@@ -638,7 +644,7 @@ app
 		}
 	}
 })
-.post('/admin/chat_bot/:type/:option?/:id?', Middleware.admin, Middleware.notification, async (req, res) => {
+.post('/admin/chat_bot/:type/:option?/:id?', Middleware.admin, Middleware.notification, Middleware.chats, async (req, res) => {
 	if (req.params.type == 'question') {
 		if (req.params.option == 'add') {
 			var question = await Models.training_question.create({
@@ -689,8 +695,9 @@ app
 /**
  * Sign Out
  */
-.get('/admin/sign-out', Middleware.admin, Middleware.notification, (req, res) => {
-	req.session.destroy((err) => {
+.get('/admin/sign-out', Middleware.admin, (req, res) => {
+	delete req.session.user_id;
+	req.session.save((error) => {
 		res.redirect('/admin/sign-in');
 	});
 });

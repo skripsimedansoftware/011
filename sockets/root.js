@@ -77,8 +77,30 @@ io.of('/').on('connection', (socket) => {
 
 				if (admins.length < 1) {
 					if (chat !== null) {
+						var Naive_Bayes = require('wink-naive-bayes-text-classifier')();
+						var NLP = require('wink-nlp-utils');
+						Naive_Bayes.defineConfig({ considerOnlyPresence: true, smoothingFactor: 0.5 });
+						Naive_Bayes.definePrepTasks([
+							// Simple tokenizer
+							NLP.string.tokenize0,
+
+							// Common Stop Words Remover
+							NLP.tokens.removeWords,
+
+							// Stemmer to obtain base word
+							NLP.tokens.stem
+						]);
+
+						var data_training = await Models.training_question.findAll();
+						data_training.forEach((el, index) => {
+							Naive_Bayes.learn(el.text, el.category);
+							if ((index+1) == data_training.length) {
+								Naive_Bayes.consolidate();
+							}
+						});
+
 						var predict = Naive_Bayes.predict(data.text);
-						var answer = await Models.training_answer.findOne({
+						var answer = await Models.training_answer.findAll({
 							where: {
 								category: predict
 							}
@@ -89,10 +111,16 @@ io.of('/').on('connection', (socket) => {
 							chat_participant = await Models.chat_participant.create({ chat_room_id: chat.get('id'), user_id: 2 });
 						}
 
-						if (answer == null) {
+						var array_random = function(array) {
+							var random = Math.floor(Math.random() * array.length);
+							return array[random];
+						}
+
+						if (answer.length < 1) {
 							answer = 'Maaf, saya tidak mengerti yang anda maksud';
 							answer += '<br><br><small>Dibalas oleh bot</small>';
 						} else {
+							answer = array_random(answer);
 							answer = answer.get('text');
 							answer += '<br><br><small>Dibalas oleh bot</small>';
 						}

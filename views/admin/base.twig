@@ -240,7 +240,7 @@ socket.on('new_notification', (data) => {
 });
 
 socket.on('chat-room-message', (message) => {
-	if ('{{ uri_paths[1] }}' !== 'live_chat') {
+	if ('{{ uri_paths[2] }}' !== 'live_chat') {
 		var html = '';
 		html += '<li>';
 			html += '<a href="/admin/live_chat">';

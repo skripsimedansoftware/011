@@ -6,8 +6,12 @@ module.exports = function(DataTypes) {
 				primaryKey: true,
 				autoIncrement: true
 			},
+			type: {
+				type: DataTypes.ENUM('page', 'post'),
+				allowNull: false
+			},
 			title: {
-				type: DataTypes.STRING(20),
+				type: DataTypes.STRING(80),
 				allowNull: false
 			},
 			slug: {

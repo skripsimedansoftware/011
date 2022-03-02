@@ -1,0 +1,20 @@
+{% extends 'base.twig' %}
+
+{% block title %}{% if post is iterable %}Berita{% else %}{{ post.title }}{% endif %} - {{ app.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+	{% if post is iterable %}
+	{% for item in post %}
+		<ul style="margin-top: 2%;">
+			<li><a href="/post/{{ item.slug }}" class="btn btn-primary">{{ item.title }}</a> </li>
+		</ul>
+	{% endfor %}
+	{% else %}
+	<div class="starter-template">
+		<h1>{{ post.title }}</h1>
+		<p>{{ post.content }}</p>
+	</div>
+	{% endif %}
+</div>
+{% endblock %}

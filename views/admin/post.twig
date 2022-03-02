@@ -1,12 +1,12 @@
 {% extends 'admin/base.twig' %}
 
-{% block title %}Halaman - {{ app.name }}{% endblock %}
+{% block title %}Publikasi - {{ app.name }}{% endblock %}
 
 {%
 	set breadcrumbs = [
 		{
-			link: '/admin/page',
-			name: 'halaman'
+			link: '/admin/post',
+			name: 'publikasi'
 		}
 	]
 %}
@@ -14,22 +14,22 @@
 	<section class="content">
 		<form action="
 		{% if data == 'new' %}
-			{{ '/admin/page/add' }}
+			{{ '/admin/post/add' }}
 		{% else %}
-			{{ '/admin/page/edit/' ~ data.id }}
+			{{ '/admin/post/edit/' ~ data.id }}
 		{% endif %}
-		" method="post" id="page">
+		" method="post" id="post">
 			<div class="box">
 				<div class="box-header with-border">
 					<h3 class="box-title">
 						{% if mode == 'list' %}
-							Daftar Halaman
+							Daftar Publikasi
 						{% elseif mode == 'view' %}
-							Pratinjau Halaman : <b>{{ data.title }}</b>
+							Pratinjau Publikasi : <b>{{ data.title }}</b>
 						{% elseif mode == 'new' %}
-							Buat Halaman Baru
+							Buat Publikasi Baru
 						{% else %}
-							Sunting Halaman
+							Sunting Publikasi
 						{% endif %}
 					</h3>
 				</div>
@@ -44,16 +44,16 @@
 								<th>Opsi</th>
 							</thead>
 							<tbody>
-								{% for page in data %}
+								{% for post in data %}
 									<tr>
 										<td>{{ loop.index }}</td>
-										<td>{{ page.title }}</td>
-										<td>{{ page.created_at|date('d/m/Y') }}</td>
-										<td>{{ page.updated_at|date('d/m/Y') }}</td>
+										<td>{{ post.title }}</td>
+										<td>{{ post.created_at|date('d/m/Y') }}</td>
+										<td>{{ post.updated_at|date('d/m/Y') }}</td>
 										<td>
-											<a href="/admin/page/view/{{ page.id }}" class="btn btn-xs btn-info"><i class="fa fa-eye"></i></a>
-											<a href="/admin/page/edit/{{ page.id }}" class="btn btn-xs btn-primary"><i class="fa fa-edit"></i></a>
-											<a href="/admin/page/delete/{{ page.id }}" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i></a>
+											<a href="/admin/post/view/{{ post.id }}" class="btn btn-xs btn-info"><i class="fa fa-eye"></i></a>
+											<a href="/admin/post/edit/{{ post.id }}" class="btn btn-xs btn-primary"><i class="fa fa-edit"></i></a>
+											<a href="/admin/post/delete/{{ post.id }}" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i></a>
 										</td>
 									</tr>
 								{% endfor %}
@@ -67,6 +67,13 @@
 							{{ data.content|raw }}
 						{% endif %}
 					{% else %}
+						<div class="form-group">
+							<label>Jenis</label>
+							<select class="form-control" name="type">
+								<option value="page">Halaman</option>
+								<option value="post">Artikel</option>
+							</select>
+						</div>
 						<div class="form-group">
 							<label>Judul</label>
 							<input type="text" class="form-control" name="title" placeholder="Judul Halaman" value="{{ data.title|default('') }}">
@@ -87,12 +94,12 @@
 				<div class="box-footer">
 					{% if mode == 'list' %}
 						<a class="btn btn-primary" onclick="window.history.back()"><i class="fa fa-arrow-circle-left"></i> Kembali</a>
-						<a href="/admin/page/new" class="btn btn-success"><i class="fa fa-plus"></i> Halaman Baru</a>
+						<a href="/admin/post/new" class="btn btn-success"><i class="fa fa-plus"></i> Publikasi Baru</a>
 					{% elseif mode == 'view' %}
 						<a class="btn btn-primary" onclick="window.history.back()"><i class="fa fa-arrow-circle-left"></i> Kembali</a>
-						<a href="/admin/page/edit/{{ data.id }}" class="btn btn-warning"><i class="fa fa-pencil"></i> Sunting</a>
-						<a href="/admin/page/delete/{{ data.id }}" class="btn btn-danger"><i class="fa fa-trash"></i> Hapus</a>
-						<a href="/admin/page/new" class="btn btn-success"><i class="fa fa-plus"></i> Halaman Baru</a>
+						<a href="/admin/post/edit/{{ data.id }}" class="btn btn-warning"><i class="fa fa-pencil"></i> Sunting</a>
+						<a href="/admin/post/delete/{{ data.id }}" class="btn btn-danger"><i class="fa fa-trash"></i> Hapus</a>
+						<a href="/admin/post/new" class="btn btn-success"><i class="fa fa-plus"></i> Publikasi Baru</a>
 					{% else %}
 						<a class="btn btn-primary" onclick="window.history.back()"><i class="fa fa-arrow-circle-left"></i> Batalkan</a>
 						<button type="submit" class="btn btn-success"><i class="fa fa-save"></i> Simpan</button>
@@ -120,13 +127,14 @@ $(document).ready(function() {
 	$('.wysihtml5').wysihtml5();
 });
 
-$('#page').on('submit', function(e) {
+$('#post').on('submit', function(e) {
 	e.preventDefault();
 	$.ajax({
 		url: $(this).attr('action'),
 		type: $(this).attr('method'),
 		dataType: 'JSON',
 		data: {
+			type: $('select[name="type"]').val(),
 			title: $('input[name="title"]').val(),
 			slug: $('input[name="slug"]').val(),
 			content: $('textarea[name="content"]').val()
