@@ -14,20 +14,7 @@
 			<li class="{{ active_menu == 'home' ? 'active' : '' }}"><a href="/admin"><i class="fa fa-dashboard"></i> <span>Halaman Utama</span></a></li>
 			<li class="{{ active_menu == 'live_chat' ? 'active' : '' }}"><a href="/admin/live_chat"><i class="fa fa-comments"></i> <span>Live Chat</span></a></li>
 			<li class="{{ active_menu == 'chat_bot' ? 'active' : '' }}"><a href="/admin/chat_bot"><i class="fa fa-compass"></i> <span>Chat Bot</span></a></li>
-			<li class="treeview {{ active_menu == 'post'?'active':'' }}">
-				<a href="#">
-					<i class="fa fa-file"></i> <span>Publikasi</span>
-					<span class="pull-right-container">
-						<i class="fa fa-angle-left pull-right"></i>
-					</span>
-				</a>
-				<ul class="treeview-menu">
-					<li class="{{ mode == 'list'?'active':''}}"><a href="/admin/post"><i class="fa fa-circle-o"></i> Daftar Publikasi</a></li>
-					{% for post in posts %}
-						<li class="{{ data_id == post.id?'active':'' }}"><a href="/admin/post/view/{{ post.id }}"><i class="fa fa-circle-o"></i> {{ post.title }}</a></li>
-					{% endfor %}
-				</ul>
-			</li>
+			<li class="{{ active_menu == 'post' ? 'active' : '' }}"><a href="/admin/post"><i class="fa fa-pencil"></i> <span>Publikasi</span></a></li>
 		</ul>
 	</section>
 </aside>

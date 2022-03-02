@@ -537,7 +537,7 @@ app
 			title: req.body.title,
 			slug: req.body.slug,
 			content: req.body.content
-		}).then(console.log).catch(console.log);
+		});
 	} else if (req.params.option == 'edit') {
 		var post = await Models.post.findOne({
 			where: {
@@ -551,7 +551,7 @@ app
 				title: req.body.title,
 				slug: req.body.slug,
 				content: req.body.content
-			}).then(console.log).catch(console.log);
+			});
 		}
 	}
 
