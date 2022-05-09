@@ -1,0 +1,20 @@
+<aside class="main-sidebar">
+	<section class="sidebar">
+		<div class="user-panel">
+			<div class="pull-left image">
+				<img src="/assets/adminLTE/v2/dist/img/user2-160x160.jpg" class="img-circle" alt="User Image">
+			</div>
+			<div class="pull-left info">
+				<p>{{ user.full_name }}</p>
+				<a href="#"><i class="fa fa-circle text-success"></i> Online</a>
+			</div>
+		</div>
+		<ul class="sidebar-menu" data-widget="tree">
+			<li class="header">MAIN MENU</li>
+			<li class="{{ active_menu == 'home' ? 'active' : '' }}"><a href="/admin"><i class="fa fa-dashboard"></i> <span>Halaman Utama</span></a></li>
+			<li class="{{ active_menu == 'live_chat' ? 'active' : '' }}"><a href="/admin/live_chat"><i class="fa fa-comments"></i> <span>Live Chat</span></a></li>
+			<li class="{{ active_menu == 'chat_bot' ? 'active' : '' }}"><a href="/admin/chat_bot"><i class="fa fa-compass"></i> <span>Chat Bot</span></a></li>
+			<li class="{{ active_menu == 'post' ? 'active' : '' }}"><a href="/admin/post"><i class="fa fa-pencil"></i> <span>Publikasi</span></a></li>
+		</ul>
+	</section>
+</aside>

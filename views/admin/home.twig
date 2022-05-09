@@ -1,0 +1,59 @@
+{% extends 'admin/base.twig' %}
+
+{% block title %}Dashboard - {{ app.name }}{% endblock %}
+
+{% block content %}
+<section class="content">
+	<div class="row">
+		<div class="col-lg-3 col-xs-6">
+			<div class="small-box bg-aqua">
+				<div class="inner">
+					<h3 class="visitor_count">0</h3>
+					<p>Pengunjung</p>
+				</div>
+				<div class="icon">
+					<i class="fa fa-users"></i>
+				</div>
+				<a href="#" class="small-box-footer"></a>
+			</div>
+		</div>
+		<div class="col-lg-3 col-xs-6">
+			<div class="small-box bg-yellow">
+				<div class="inner">
+					<h3>{{ widget.page }}</h3>
+					<p>Publikasi</p>
+				</div>
+				<div class="icon">
+					<i class="fa fa-pencil"></i>
+				</div>
+				<a href="#" class="small-box-footer"></a>
+			</div>
+		</div>
+		<div class="col-lg-3 col-xs-6">
+			<div class="small-box bg-green">
+				<div class="inner">
+					<h3>{{ widget.chat.all }} / {{ widget.chat.closed }}</h3>
+					<p>Obrolan</p>
+				</div>
+				<div class="icon">
+					<i class="fa fa-comments"></i>
+				</div>
+				<a href="#" class="small-box-footer"></a>
+			</div>
+		</div>
+		<div class="col-lg-3 col-xs-6">
+			<div class="small-box bg-red">
+				<div class="inner">
+					<h3>{{ widget.data_training.question }} / {{ widget.data_training.answer }}</h3>
+					<p>Data Training</p>
+				</div>
+				<div class="icon">
+					<i class="fa fa-pie-chart"></i>
+				</div>
+				<a href="#" class="small-box-footer"></a>
+			</div>
+		</div>
+	</div>
+	<!-- /.row -->
+</section>
+{% endblock %}

@@ -1,0 +1,146 @@
+{% extends 'admin/base.twig' %}
+
+{% block title %}Publikasi - {{ app.name }}{% endblock %}
+
+{%
+	set breadcrumbs = [
+		{
+			link: '/admin/post',
+			name: 'publikasi'
+		}
+	]
+%}
+{% block content %}
+	<section class="content">
+		<form action="
+		{% if data == 'new' %}
+			{{ '/admin/post/add' }}
+		{% else %}
+			{{ '/admin/post/edit/' ~ data.id }}
+		{% endif %}
+		" method="post" id="post">
+			<div class="box">
+				<div class="box-header with-border">
+					<h3 class="box-title">
+						{% if mode == 'list' %}
+							Daftar Publikasi
+						{% elseif mode == 'view' %}
+							Pratinjau Publikasi : <b>{{ data.title }}</b>
+						{% elseif mode == 'new' %}
+							Buat Publikasi Baru
+						{% else %}
+							Sunting Publikasi
+						{% endif %}
+					</h3>
+				</div>
+				<div class="box-body">
+					{% if  mode == 'list' %}
+						<table class="table table-hover table-striped">
+							<thead>
+								<th>No</th>
+								<th>Judul</th>
+								<th>Tanggal Pembuatan</th>
+								<th>Terakhir Diperbaharui</th>
+								<th>Opsi</th>
+							</thead>
+							<tbody>
+								{% for post in data %}
+									<tr>
+										<td>{{ loop.index }}</td>
+										<td>{{ post.title }}</td>
+										<td>{{ post.created_at|date('d/m/Y') }}</td>
+										<td>{{ post.updated_at|date('d/m/Y') }}</td>
+										<td>
+											<a href="/admin/post/view/{{ post.id }}" class="btn btn-xs btn-info"><i class="fa fa-eye"></i></a>
+											<a href="/admin/post/edit/{{ post.id }}" class="btn btn-xs btn-primary"><i class="fa fa-edit"></i></a>
+											<a href="/admin/post/delete/{{ post.id }}" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i></a>
+										</td>
+									</tr>
+								{% endfor %}
+								<tr>
+
+								</tr>
+							</tbody>
+						</table>
+					{% elseif  mode == 'view' %}
+						{% if data.content|trim is not empty %}
+							{{ data.content|raw }}
+						{% endif %}
+					{% else %}
+						<div class="form-group">
+							<label>Jenis</label>
+							<select class="form-control" name="type">
+								<option value="page" {{ data.type == 'page'?'selected':'' }}>Halaman</option>
+								<option value="post" {{ data.type == 'post'?'selected':'' }}>Artikel</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>Judul</label>
+							<input type="text" class="form-control" name="title" placeholder="Judul Halaman" value="{{ data.title|default('') }}">
+						</div>
+						<div class="form-group">
+							<label>URL Halaman</label>
+							<div class="input-group" style="cursor: pointer;" onclick="edit_slug(this)">
+								<input class="form-control" type="text" name="slug" placeholder="URL Halaman" value="{{ data.slug|default('') }}" disabled>
+								<div class="input-group-addon"><i class="fa fa-pencil"></i></div>
+							</div>
+						</div>
+						<div class="form-group">
+							<label>Isi</label>
+							<textarea id="content">{{ data.content|default('') }}</textarea>
+						</div>
+					{% endif %}
+				</div>
+				<div class="box-footer">
+					{% if mode == 'list' %}
+						<a class="btn btn-primary" onclick="window.history.back()"><i class="fa fa-arrow-circle-left"></i> Kembali</a>
+						<a href="/admin/post/new" class="btn btn-success"><i class="fa fa-plus"></i> Publikasi Baru</a>
+					{% elseif mode == 'view' %}
+						<a class="btn btn-primary" onclick="window.history.back()"><i class="fa fa-arrow-circle-left"></i> Kembali</a>
+						<a href="/admin/post/edit/{{ data.id }}" class="btn btn-warning"><i class="fa fa-pencil"></i> Sunting</a>
+						<a href="/admin/post/delete/{{ data.id }}" class="btn btn-danger"><i class="fa fa-trash"></i> Hapus</a>
+						<a href="/admin/post/new" class="btn btn-success"><i class="fa fa-plus"></i> Publikasi Baru</a>
+					{% else %}
+						<a class="btn btn-primary" onclick="window.history.back()"><i class="fa fa-arrow-circle-left"></i> Batalkan</a>
+						<button type="submit" class="btn btn-success"><i class="fa fa-save"></i> Simpan</button>
+					{% endif %}
+				</div>
+			</div>
+		</form>
+	</section>
+{% endblock %}
+
+{% block javascript %}
+<script src="https://cdn.ckeditor.com/4.18.0/full/ckeditor.js"></script>
+<script type="text/javascript">
+function edit_slug(el) {
+	$($(el).children()[0]).removeAttr('disabled');
+}
+$('input[name="title"]').on('keyup', () => {
+	$('input[name="slug"]').val($('input[name="title"]').val().toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''));
+});
+CKEDITOR.replace('content');
+$('#post').on('submit', function(e) {
+	e.preventDefault();
+	$.ajax({
+		url: $(this).attr('action'),
+		type: $(this).attr('method'),
+		dataType: 'JSON',
+		data: {
+			type: $('select[name="type"]').val(),
+			title: $('input[name="title"]').val(),
+			slug: $('input[name="slug"]').val(),
+			content: CKEDITOR.instances.content.getData()
+		},
+		success: function(data) {
+			if (data.status == 'success') {
+				window.location.href = '/admin';
+			}
+		},
+		error: function(error) {
+			console.log(error);
+		}
+	});
+});
+</script>
+{% endblock %}

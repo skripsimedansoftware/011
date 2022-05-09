@@ -1,0 +1,312 @@
+{% extends 'admin/base.twig' %}
+
+{% block title %}Chat Bot - {{ app.name }}{% endblock %}
+
+{%
+	set breadcrumbs = [
+		{
+			link: '/admin/chat_bot',
+			name: 'Chat Bot'
+		}
+	]
+%}
+
+{% block content %}
+<section class="content">
+<div class="box">
+	<div class="box-header with-border"><h3 class="box-title">Data Training - Pertanyaan</h3></div>
+	<div class="box-body">
+		<table class="table table-hover table-striped">
+			<thead>
+				<th>No</th>
+				<th>Kategori</th>
+				<th>Pertanyaan</th>
+				<th>Opsi</th>
+			</thead>
+			<tbody id="question-lists">
+				{% for question in questions %}
+				<tr>
+					<td>{{ loop.index }}</td>
+					<td>{{ question.category }}</td>
+					<td>{{ question.text }}</td>
+					<td>
+						<button class="btn btn-xs btn-question-option btn-primary" data-option="edit" data-id="{{ question.id }}" data-toggle="modal" data-target="#modal-question"><i class="fa fa-pencil"></i></button>
+						<button class="btn btn-xs btn-question-option btn-danger" data-option="delete" data-id="{{ question.id }}"><i class="fa fa-trash"></i></button>
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+	<div class="box-footer">
+		<button class="btn btn-question-option btn-sm btn-primary" data-option="add" data-toggle="modal" data-target="#modal-question"><i class="fa fa-plus"></i> Tambah Data</button>
+	</div>
+</div>
+
+<div class="box">
+	<div class="box-header with-border"><h3 class="box-title">Data Training - Jawaban</h3></div>
+	<div class="box-body">
+		<table class="table table-hover table-striped">
+			<thead>
+				<th>No</th>
+				<th>Kategori</th>
+				<th>Jawaban</th>
+				<th>Opsi</th>
+			</thead>
+			<tbody id="answer-lists">
+				{% for answer in answers %}
+				<tr>
+					<td>{{ loop.index }}</td>
+					<td>{{ answer.category }}</td>
+					<td>{{ answer.text }}</td>
+					<td>
+						<button class="btn btn-xs btn-answer-option btn-primary" data-option="edit" data-id="{{ answer.id }}" data-toggle="modal" data-target="#modal-answer"><i class="fa fa-pencil"></i></button>
+						<button class="btn btn-xs btn-answer-option btn-danger" data-option="delete" data-id="{{ answer.id }}"><i class="fa fa-trash"></i></button>
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+	<div class="box-footer">
+		<button class="btn btn-answer-option btn-sm btn-primary" data-option="add" data-toggle="modal" data-target="#modal-answer"><i class="fa fa-plus"></i> Tambah Data</button>
+	</div>
+</div>
+
+
+<div class="modal fade" id="modal-question">
+	<div class="modal-dialog">
+		<form method="post" id="question" mode="add" data="">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title form-title"></h4>
+				</div>
+				<div class="modal-body">
+					<div class="form-group">
+						<label>Kategori</label>
+						<input type="text" class="form-control question-category" placeholder="Kategori">
+					</div>
+					<div class="form-group">
+						<label>Pertanyaan</label>
+						<input type="text" class="form-control question-text" placeholder="Pertanyaan...">
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default pull-left" data-dismiss="modal">Tutup</button>
+					<button type="submit" class="btn btn-primary">Simpan Pertanyaan</button>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+
+<div class="modal fade" id="modal-answer">
+	<div class="modal-dialog">
+		<form method="post" id="answer" mode="add" data="">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title form-title"></h4>
+				</div>
+				<div class="modal-body">
+					<div class="form-group">
+						<label>Kategori</label>
+						<select class="form-control answer-category">
+							<option value="">Pilih Kategori</option>
+							{% for category in categories %}
+								<option value="{{ category.category }}">{{ category.category }}</option>
+							{% endfor %}
+						</select>
+					</div>
+					<div class="form-group">
+						<label>Jawaban</label>
+						<input type="text" class="form-control answer-text" placeholder="Jawaban...">
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default pull-left" data-dismiss="modal">Tutup</button>
+					<button type="submit" class="btn btn-primary">Simpan Jawaban</button>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+
+
+</section>
+{% endblock %}
+
+{% block javascript %}
+<script type="text/javascript">
+$(document).on('click', '.btn-question-option', function(e) {
+	e.preventDefault();
+	var option = $(this).attr('data-option');
+	var data = $(this).attr('data-id');
+	if (option == 'add') {
+		$('.question-category').val('');
+		$('.question-text').val('');
+		$('.form-title').text('Tambah Pertanyaan');
+		$('#question').attr('mode', 'add');
+	} else if (option == 'edit') {
+		$('.form-title').text('Sunting Pertanyaan');
+		$('#question').attr('mode', 'edit');
+		$('#question').attr('data', data);
+		$.ajax({
+			url: '/admin/chat_bot/question/'+data,
+			type: 'GET',
+			dataType: 'JSON',
+			success: (data) => {
+				$('.question-category').val(data.data.category);
+				$('.question-text').val(data.data.text);
+			}
+		});
+	} else {
+		$.ajax({
+			url: '/admin/chat_bot/question/delete/'+data,
+			type: 'POST',
+			dataType: 'JSON',
+			success: (data) => {
+				if (data.status == 'success') {
+					window.location.reload();
+				}
+			}
+		});
+	}
+});
+
+$(document).on('click', '.btn-answer-option', function(e) {
+	e.preventDefault();
+	var option = $(this).attr('data-option');
+	var data = $(this).attr('data-id');
+	if (option == 'add') {
+		$('.answer-category').val('');
+		$('.answer-text').val('');
+		$('.form-title').text('Tambah Jawaban');
+		$('#answer').attr('mode', 'add');
+	} else if (option == 'edit') {
+		$('.form-title').text('Sunting Jawaban');
+		$('#answer').attr('mode', 'edit');
+		$('#answer').attr('data', data);
+		$.ajax({
+			url: '/admin/chat_bot/answer/'+data,
+			type: 'GET',
+			dataType: 'JSON',
+			success: (data) => {
+				$('.answer-category').val(data.data.category);
+				$('.answer-text').val(data.data.text);
+			}
+		});
+	} else {
+		$.ajax({
+			url: '/admin/chat_bot/answer/delete/'+data,
+			type: 'POST',
+			dataType: 'JSON',
+			success: (data) => {
+				if (data.status == 'success') {
+					window.location.reload();
+				}
+			}
+		});
+	}
+});
+
+$('#question').on('submit', (e) => {
+	e.preventDefault();
+	var url = '';
+	var mode = $('#question').attr('mode');
+	var data = $('#question').attr('data');
+
+	if (mode == 'add') {
+		url = '/admin/chat_bot/question/add';
+	} else {
+		url = '/admin/chat_bot/question/edit/'+data;
+	}
+
+	$.ajax({
+		url: url,
+		type: 'POST',
+		dataType: 'JSON',
+		data: {
+			category: $('.question-category').val(),
+			text: $('.question-text').val()
+		},
+		success: (data) => {
+			$('.question-category').val('');
+			$('.question-text').val('');
+
+			if (mode == 'add') {
+				$('#question-lists').append(
+					'<tr>'+
+					'<td>'+($('#question-lists').children().length+1)+'</td><td>'+data.data.category+'</td><td>'+data.data.text+'</td>'+
+					'<td>'+
+						'<button class="btn btn-xs btn-question-option btn-primary" data-option="edit" data-id="'+data.data.id+'" data-toggle="modal" data-target="#modal-question"><i class="fa fa-pencil"></i></button> '+
+						'<button class="btn btn-xs btn-question-option btn-danger" data-option="delete" data-id="'+data.data.id+'"><i class="fa fa-trash"></i></button>'+
+					'</td>'+
+					'</tr>'
+				);
+			} else {
+				window.location.reload();
+			}
+			$('#modal-question').modal('hide');
+			Swal.fire('Data Ditambahkan!', 'Data training untuk pertanyaan telah ditambahkan', 'success');
+		}
+	});
+});
+
+$('#answer').on('submit', (e) => {
+	e.preventDefault();
+	var url = '';
+	var mode = $('#answer').attr('mode');
+	var data = $('#answer').attr('data');
+
+	if (mode == 'add') {
+		url = '/admin/chat_bot/answer/add';
+	} else {
+		url = '/admin/chat_bot/answer/edit/'+data;
+	}
+
+	$.ajax({
+		url: url,
+		type: 'POST',
+		dataType: 'JSON',
+		data: {
+			category: $('.answer-category').val(),
+			text: $('.answer-text').val()
+		},
+		success: (data) => {
+			$('.answer-category').val('');
+			$('.answer-text').val('');
+
+			if (mode == 'add') {
+				$('#answer-lists').append(
+					'<tr>'+
+					'<td>'+($('#answer-lists').children().length+1)+'</td><td>'+data.data.category+'</td><td>'+data.data.text+'</td>'+
+					'<td>'+
+						'<button class="btn btn-xs btn-answer-option btn-primary" data-option="edit" data-id="'+data.data.id+'" data-toggle="modal" data-target="#modal-answer"><i class="fa fa-pencil"></i></button> '+
+						'<button class="btn btn-xs btn-answer-option btn-danger" data-option="delete" data-id="'+data.data.id+'"><i class="fa fa-trash"></i></button>'+
+					'</td>'+
+					'</tr>'
+				);
+			} else {
+				window.location.reload();
+			}
+			$('#modal-answer').modal('hide');
+			Swal.fire('Data Ditambahkan!', 'Data training untuk pertanyaan telah ditambahkan', 'success');
+		}
+	});
+});
+
+$(document).on('click', '#train-bot', function(e) {
+	e.preventDefault();
+	$.ajax({
+		url: '/chat_bot',
+		type: 'GET',
+		dataType: 'JSON',
+		success: (data) => {
+			Swal.fire('Berhasil!', 'Bot telah di latih', 'success');
+		}
+	});
+});
+</script>
+{% endblock %}

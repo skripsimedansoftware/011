@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+		<meta name="description" content="">
+		<meta name="author" content="">
+		<link rel="icon" href="/favicon.ico">
+		<title>{% block title %}{{ app.name }}{% endblock %}</title>
+		<!-- Bootstrap core CSS -->
+		<link href="/assets/bootstrap/v3/dist/css/bootstrap.min.css" rel="stylesheet">
+		<link href="/assets/web/css/style.css" rel="stylesheet">
+		<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+		<!--[if lt IE 9]>
+		<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+		<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+		<![endif]-->
+	</head>
+	<body>
+		{% include 'components/navbar.twig' %}
+		{% include 'components/live_chat.twig' %}
+		{% block content %}{% endblock %}
+		{% include 'components/footer.twig' %}
+		<script src="/ws/socket.io.min.js"></script>
+		<script src="/assets/jQuery/jquery-3.6.0.min.js"></script>
+		<link rel="stylesheet" href="/assets/SweetAlert2/sweetalert2.min.css">
+		<script src="/assets/SweetAlert2/sweetalert2.min.js"></script>
+		<script src="/assets/bootstrap/v3/dist/js/bootstrap.min.js"></script>
+		<script type="text/javascript">
+		var message_received = new Audio('/assets/sounds/message-received.mp3');
+		function html_chat(from, text) {
+			var direction = (from == 'user')?'left':'right';
+			var photo = (from == 'user')?'user2-160x160.jpg':'user1-128x128.jpg';
+			var html = '';
+			html += '<div class="chatbox__body__message chatbox__body__message--'+direction+'">';
+			html += '<img src="/assets/adminLTE/v2/dist/img/'+photo+'" alt="Picture">';
+			html += '<p>'+text+'</p>';
+			html += '</div>';
+			return html;
+		}
+
+		function scrollBottomOfChat () {
+			$('.chatbox__body').prop('scrollTop', ($('.chatbox__body').prop('scrollHeight')-$('.chatbox__body').prop('clientHeight')));
+		}
+
+		(function($) {
+			$(document).ready(function() {
+				var socket = io(window.location.host, {
+					path: '/ws'
+				});
+
+				socket.on('chat-room-message', (message) => {
+					$('.chatbox__body').append(html_chat(message.from, message.text));
+					message_received.play();
+					scrollBottomOfChat();
+				});
+
+				var $chatbox = $('.chatbox'),
+					$chatboxTitle = $('.chatbox__title'),
+					$chatboxTitleClose = $('.chatbox__title__close'),
+					$chatboxCredentials = $('.chatbox__credentials');
+					$chatboxTitle.on('click', function() {
+					$chatbox.toggleClass('chatbox--tray');
+				});
+
+				$chatboxTitleClose.on('click', function(e) {
+					e.stopPropagation();
+					$chatbox.toggleClass('chatbox--tray');
+				});
+
+				$chatbox.on('transitionend', function() {
+					if ($chatbox.hasClass('chatbox--closed')) {
+						$chatbox.toggleClass('chatbox--tray');
+					}
+				});
+
+				$.ajax({
+					url: '/chat_bot/status',
+					type: 'POST',
+					dataType: 'JSON',
+					success: function(data) {
+						if (data.status == 'success') {
+							if (data.room !== 'none') {
+								localStorage.setItem('chat_room', data.room);
+								localStorage.setItem('guest', data.guest);
+
+								socket.emit('chat-room-join', data.room);
+								$chatbox.removeClass('chatbox--empty');
+								scrollBottomOfChat();
+							}
+						}
+					},
+					error: function(error) {
+					}
+				});
+
+				$chatboxCredentials.on('submit', function(e) {
+					e.preventDefault();
+					$.ajax({
+						url: '/chat_bot/start',
+						type: 'POST',
+						dataType: 'JSON',
+						data: {
+							name: $('#chat_auth_name').val(),
+							whatsapp: $('#chat_auth_whatsapp').val()
+						},
+						success: function(data) {
+							if (data.status == 'success') {
+								localStorage.setItem('chat_room', data.room);
+								localStorage.setItem('guest', data.guest);
+								socket.emit('chat-room-join', data.room);
+							}
+
+							$chatbox.removeClass('chatbox--empty');
+						}
+					});
+				});
+
+				$('.chatbox__message').keypress(function (e) {
+					if (e.which === 13 && !e.shiftKey) {
+						e.preventDefault();
+						var text = $(this).val().trim();
+						socket.emit('chat-room-message', {
+							from: 'guest',
+							sender: localStorage.getItem('guest'),
+							room: localStorage.getItem('chat_room'),
+							text: text
+						});
+
+						if (text.length > 0) {
+							$('.chatbox__body').append(html_chat('guest', text));
+							$(this).val('');
+							scrollBottomOfChat();
+						}
+					}
+				});
+
+				socket.on('chat-room-end', () => {
+					localStorage.removeItem('guest');
+					localStorage.removeItem('chat_room');
+					$('.chatbox__body').empty();
+					$('#chat_auth_name').val('');
+					$('#chat_auth_whatsapp').val('');
+					Swal.fire('Obrolan Berakhir!', 'Admin telah mengakhiri obrolan bersama anda', 'success');
+					$chatbox.addClass('chatbox--empty');
+				});
+			});
+		})(jQuery);
+		</script>
+	</body>
+</html>
